@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingTop="30dp"
+        android:text="Partage"
+        android:textSize="40dp"/>
+
+    <TextView
+        android:id="@+id/share_url"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingTop="15dp"
+        android:textStyle="italic"
+        android:textColor="#0000FF"/>
+
+    <EditText
+        android:id="@+id/share_title"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:paddingTop="50dp"
+        android:hint="Titre"
+        android:layout_gravity="center"
+        android:autoText="false" />
+
+    <EditText
+        android:id="@+id/share_artist"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:hint="Auteur"
+        android:layout_gravity="center"/>
+
+    <EditText
+        android:id="@+id/share_description"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:hint="Description"
+        android:layout_gravity="center"/>
+
+    <Spinner
+        android:id="@+id/share_styles"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_gravity="center"
+        android:text="partager"/>
+
+
+</LinearLayout>

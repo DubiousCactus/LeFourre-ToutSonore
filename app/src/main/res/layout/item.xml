@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/first_separator"/>
+
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.Android.com/apk/res-auto"
+        android:id="@+id/playListCard"
+        android:layout_gravity="center"
+        android:layout_width="340dp"
+        android:layout_height="200dp"
+        card_view:cardUseCompatPadding="true"
+        card_view:cardCornerRadius="0dp"
+        card_view:cardBackgroundColor="#AA66CC"
+        card_view:cardElevation="10dp"
+        app:cardUseCompatPadding="true"
+        android:clickable="true">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ban_reggae"/>
+
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="65dp"
+                android:layout_alignParentBottom="true"
+                android:id="@+id/separator"/>
+
+            <TextView
+                android:id="@+id/card_title"
+                android:paddingBottom="32dp"
+                android:paddingLeft="20dp"
+                android:layout_alignParentBottom="true"
+                android:text="Reggae"
+                android:textColor="#FFFFFF"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="@dimen/abc_text_size_headline_material"/>
+
+            <TextView
+                android:id="@+id/card_ajouts"
+                android:paddingBottom="32dp"
+                android:paddingRight="10dp"
+                android:gravity="right"
+                android:layout_alignParentBottom="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="153 ajouts"
+                android:textColor="#CEFBFC"
+                android:textSize="@dimen/abc_text_size_headline_material"/>
+
+            <TextView
+                android:id="@+id/card_styles"
+                android:paddingBottom="5dp"
+                android:gravity="center"
+                android:layout_alignParentBottom="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dub - Reggae - Dancehall - Roots"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/snackbar_text_size"/>
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>

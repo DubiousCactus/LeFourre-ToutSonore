@@ -28,7 +28,8 @@
         android:paddingTop="50dp"
         android:hint="Titre"
         android:layout_gravity="center"
-        android:autoText="false" />
+        android:focusable="false"
+        android:clickable="false"/>
 
     <EditText
         android:id="@+id/share_artist"
@@ -36,7 +37,9 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
         android:hint="Auteur"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:focusable="false"
+        android:clickable="false"/>
 
     <EditText
         android:id="@+id/share_description"
@@ -46,19 +49,31 @@
         android:hint="Description"
         android:layout_gravity="center"/>
 
-    <Spinner
+    <Button
         android:id="@+id/share_styles"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_gravity="center_horizontal" />
+        android:layout_gravity="center_horizontal"
+        android:text="Sélectionner styles"/>
+
+    <TextView
+        android:id="@+id/share_styles_display"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingTop="10dp"
+        android:textStyle="italic"
+        android:gravity="center"/>
 
     <Button
+        android:id="@+id/share_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:layout_gravity="center"
-        android:text="partager"/>
+        android:text="partager"
+        android:clickable="false" />
 
 
 </LinearLayout>

@@ -39,9 +39,8 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
     private ArrayList<Style> selectedStyles;
     private boolean stylesDone;
     private boolean title_artistDone;
-    private String url, title, artist, desc, style;
-    private int sharer;
     private Song song;
+    private User currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,33 +48,28 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         stylesDone = false;
         title_artistDone = false;
         song = new Song();
+        currentUser = (User) getIntent().getSerializableExtra("user");
         setContentView(R.layout.activity_share);
-        // Get intent, action and MIME type
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        String type = intent.getType();
 
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if ("text/plain".equals(type)) {
-                handleSendText(intent); // Handle text being sent
-            }
-        }
         initStyles();
         stylesAdapter = new StylesAdapter(this, styles);
-        ((Button) findViewById(R.id.share_styles)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.share_styles).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ShowAlertDialogWithListview();
+                ShowAlertDialogWithListView();
             }
         });
         findViewById(R.id.share_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                song.setDescription(((EditText) findViewById(R.id.share_description)).getText().toString());
+                //song.setSharer();
                 RequestQueue requestQueue = Volley.newRequestQueue(Share.this);
                 StringRequest request = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/ajout.php", new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        Toast.makeText(Share.this, "Son ajouté !", Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 }, Share.this) {
                     @Override
@@ -86,14 +80,20 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                         params.put("titre", song.getTitle());
                         params.put("artiste", song.getArtist());
                         params.put("description", song.getDescription());
-                        params.put("partageur", String.valueOf(song.getSharer()));
+                        params.put("partageur", String.valueOf(currentUser.getId()));
 
                         return params;
                     }
                 };
+                Log.i("request", request.toString());
                 requestQueue.add(request);
             }
         });
+
+        if(getIntent().getStringExtra("function").equals("parseSoundCloud"))
+            parseSoundCloud(getIntent().getStringExtra("sharedText"));
+        else if(getIntent().getStringExtra("function").equals("parseYoutube"))
+            parseYoutube(getIntent().getStringExtra("sharedText"));
     }
 
     private void initStyles() {
@@ -125,15 +125,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         requestQueue.add(jsObjRequest);
     }
 
-    void handleSendText(Intent intent) {
-        String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (sharedText != null) {
-            if(sharedText.contains("youtu"))
-                parseYoutube(sharedText);
-            else if(sharedText.contains("soundcloud"))
-                parseSoundCloud(sharedText);
-        }
-    }
+
 
     void parseYoutube(String url) {
         ((TextView) findViewById(R.id.share_url)).setText(url);
@@ -151,14 +143,14 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         ((TextView) findViewById(R.id.share_url)).setText(url);
         Map<String, String> params = new HashMap<>();
         params.put("url", url);
-        params.put("client_id", "@string/soundCloud_app_id");
+        params.put("client_id", getString(R.string.soundCloud_app_id));
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, "https://api.soundcloud.com/resolve.json", params, this, this);
         requestQueue.add(jsObjRequest);
         song.setLink(url);
     }
 
-    public void ShowAlertDialogWithListview()
+    public void ShowAlertDialogWithListView()
     {
         final ArrayList<Integer> selectedItemsIndexList = new ArrayList<>();
         final AlertDialog dialog = new AlertDialog.Builder(this)
@@ -167,7 +159,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                 .setPositiveButton("Valider", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        validateChoie(selectedItemsIndexList);
+                        validateChoice(selectedItemsIndexList);
                     }
                 })
                 .setNegativeButton("Annuler", null)
@@ -192,7 +184,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         dialog.show();
     }
 
-    private void validateChoie(ArrayList<Integer> selectedItemsIndexList) {
+    private void validateChoice(ArrayList<Integer> selectedItemsIndexList) {
         selectedStyles = new ArrayList<>();
         TextView stylesDisplay = (TextView) findViewById(R.id.share_styles_display);
         for(Iterator it = selectedItemsIndexList.iterator(); it.hasNext();) {
@@ -204,8 +196,16 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         }
         stylesDone = true;
         if(title_artistDone)
-            ((Button) findViewById(R.id.share_button)).setClickable(true);
-        song.setStyles(styles.toString());
+            findViewById(R.id.share_button).setClickable(true);
+
+        String stringFormatStyles = "";
+        for(Iterator i = selectedStyles.iterator(); i.hasNext();) {
+            stringFormatStyles = stringFormatStyles.concat(String.valueOf(((Style) i.next()).getId()));
+            if(i.hasNext())
+                stringFormatStyles = stringFormatStyles.concat(",");
+        }
+
+        song.setStyles(stringFormatStyles);
     }
 
     @Override
@@ -218,8 +218,11 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         String title = "", artist = "";
         try {
             String fullTitle = response.getString("title");
-            title = fullTitle.split(" - ")[0];
-            artist = fullTitle.split(" - ")[1];
+            if(fullTitle.contains("-")) {
+                title = fullTitle.split(" - ")[0];
+                artist = fullTitle.split(" - ")[1];
+            } else
+                title = fullTitle;
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -234,7 +237,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         vTitle.setClickable(true);
         title_artistDone = true;
         if(stylesDone)
-            ((Button) findViewById(R.id.share_button)).setClickable(true);
+            findViewById(R.id.share_button).setClickable(true);
         song.setTitle(title);
         song.setArtist(artist);
     }

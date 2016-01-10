@@ -1,22 +1,19 @@
 package tk.lefourretoutsonore.lefourre_toutsonore;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.internal.widget.AdapterViewCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -30,7 +27,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class Share extends AppCompatActivity implements Response.ErrorListener, Response.Listener<JSONObject> {
@@ -41,6 +37,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
     private boolean title_artistDone;
     private Song song;
     private User currentUser;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,9 +84,12 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                 };
                 Log.i("request", request.toString());
                 requestQueue.add(request);
+                progressDialog = ProgressDialog.show(Share.this, "",
+                        "Chargement...", true);
             }
         });
-
+        progressDialog = ProgressDialog.show(this, "",
+                "Chargement...", true);
         if(getIntent().getStringExtra("function").equals("parseSoundCloud"))
             parseSoundCloud(getIntent().getStringExtra("sharedText"));
         else if(getIntent().getStringExtra("function").equals("parseYoutube"))
@@ -240,5 +240,6 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
             findViewById(R.id.share_button).setClickable(true);
         song.setTitle(title);
         song.setArtist(artist);
+        progressDialog.dismiss();
     }
 }

@@ -1,5 +1,6 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -37,6 +38,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private ListView listView;
     private PlayList.PlayListChoice choice;
     private User currentUser;
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +94,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             playlist.setCurrentUser(currentUser);
             Log.i("id", "id = " + currentUser.getId());
         }
+         dialog = ProgressDialog.show(this, "",
+                "Chargement...", true);
         playlist.fetchSounds();
     }
 
@@ -136,7 +140,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             listView.setAdapter(adapter);
             Toast.makeText(PlayListView.this, "Chargement depuis le cache", Toast.LENGTH_SHORT).show();
         } else
-        Toast.makeText(PlayListView.this, "Aucun fichier cache", Toast.LENGTH_SHORT).show();
+            Toast.makeText(PlayListView.this, "Aucun fichier cache", Toast.LENGTH_SHORT).show();
+        dialog.dismiss();
     }
 
     @Override
@@ -170,5 +175,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         listView = (ListView) findViewById(R.id.songsList);
         PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
         listView.setAdapter(adapter);
+        dialog.dismiss();
     }
 }

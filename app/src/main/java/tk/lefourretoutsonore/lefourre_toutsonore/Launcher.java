@@ -31,6 +31,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
+import tk.lefourretoutsonore.lefourre_toutsonore.service.PollService;
+
 public class Launcher extends AppCompatActivity {
     private CallbackManager callbackManager;
     private ProfileTracker mProfileTracker;
@@ -63,36 +67,8 @@ public class Launcher extends AppCompatActivity {
         callbackManager = CallbackManager.Factory.create();
         final LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions(Arrays.asList("public_profile, email"));
-        LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        Toast.makeText(Launcher.this, "Connexion annulée", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(FacebookException exception) {
-                        Toast.makeText(Launcher.this, "Connexion échouée", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();  // Always call the superclass method first
-        // Get intent, action and MIME type
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        String type = intent.getType();
-
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if ("text/plain".equals(type)) {
-                handleSendText(intent); // Handle text being sent
-            }
-        }
+        PollService.setServiceAlarm(Launcher.this, true);
+        updateUI();
     }
 
     @Override
@@ -103,15 +79,15 @@ public class Launcher extends AppCompatActivity {
 
     private void updateUI() {
         boolean enableButtons = AccessToken.getCurrentAccessToken() != null;
-
         Profile profile = Profile.getCurrentProfile();
-        if (profile == null) {
-            Log.e("Profile", "null");
-        }
+
         if (enableButtons && profile != null) {
-            Log.i("toShareWeGo", String.valueOf(toShareWeGo));
             User user = new User(profile.getName(), Long.valueOf(profile.getId()));
-            if(!toShareWeGo)
+            if(getIntent().getStringExtra("playlist") != null) {
+                myIntent = new Intent(Launcher.this, PlayListView.class);
+                if(getIntent().getStringExtra("playlist").equals("all"))
+                    myIntent.putExtra("choice", PlayList.PlayListChoice.ALL);
+            } else if(!toShareWeGo)
                 myIntent = new Intent(Launcher.this, Main.class);
 
             myIntent.putExtra("user", user);

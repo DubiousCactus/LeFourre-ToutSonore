@@ -18,7 +18,8 @@
             android:layout_weight="1"
             android:typeface="monospace"
             android:paddingLeft="5dp"
-            android:height="42sp" />
+            android:height="42sp"
+            android:textColor="#60FFFFFF" />
         <TextView
             android:id="@+id/row_styles"
             android:layout_width="fill_parent"
@@ -28,14 +29,16 @@
             android:layout_weight="1"
             android:typeface="normal"
             android:height="42sp"
-            android:textStyle="italic" />
+            android:textStyle="italic"
+            android:textColor="#60FFFFFF" />
         <TextView
             android:id="@+id/row_likes"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="15  ❤"
             android:paddingRight="5dp"
-            android:gravity="right"/>
+            android:gravity="right"
+            android:textColor="#60FFFFFF" />
     </TableRow>
 
     <TableRow android:layout_height="wrap_content"
@@ -48,7 +51,8 @@
             android:text="The ego"
             android:layout_weight="1"
             android:paddingLeft="25dp"
-            android:height="35sp" />
+            android:height="35sp"
+            android:textColor="#60FFFFFF" />
     </TableRow>
 
 </TableLayout>

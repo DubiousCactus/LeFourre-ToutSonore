@@ -1,11 +1,13 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
@@ -16,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
@@ -25,6 +28,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
@@ -69,7 +75,6 @@ public class PlayList implements Serializable {
     private int count;
     private String name;
     private Context context;
-    private boolean done;
     private PlayListChoice choice;
     private User currentUser;
 
@@ -78,7 +83,6 @@ public class PlayList implements Serializable {
         this.choice = choice;
         this.context = context;
         songList = new ArrayList<>();
-        done = false;
         count = 0;
     }
 
@@ -104,10 +108,6 @@ public class PlayList implements Serializable {
 
     public int getCount() {
         return count;
-    }
-
-    public boolean getDone() {
-        return done;
     }
 
     public void fetchSounds() {

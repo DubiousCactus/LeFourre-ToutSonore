@@ -22,6 +22,8 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
+import co.mobiwise.library.InteractivePlayerView;
+import co.mobiwise.library.OnActionClickedListener;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
@@ -48,8 +50,29 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
+        InteractivePlayerView ipv = (InteractivePlayerView) findViewById(R.id.ipv);
+        ipv.setMax(123); // music duration in seconds.
+        ipv.setOnActionClickedListener(new OnActionClickedListener() {
+            @Override
+            public void onActionClicked(int id) {
+                switch (id) {
+                    case 1:
+                        //Called when 1. action is clicked.
+                        break;
+                    case 2:
+                        //Called when 2. action is clicked.
+                        break;
+                    case 3:
+                        //Called when 3. action is clicked.
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
+        ipv.start();
     }
 
     private void initDrawer() {

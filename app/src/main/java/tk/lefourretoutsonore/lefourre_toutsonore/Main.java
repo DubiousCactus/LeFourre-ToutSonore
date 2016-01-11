@@ -33,7 +33,8 @@ public class Main extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setTitle("Le Fourre-Tout Sonore");
         setContentView(R.layout.activity_main);
-        currentUser = (User) getIntent().getSerializableExtra("user");
+        if(currentUser == null)
+            currentUser = (User) getIntent().getSerializableExtra("user");
         initCards();
         initDrawer();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());

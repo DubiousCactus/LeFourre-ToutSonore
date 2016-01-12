@@ -93,6 +93,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        playing = false;
+    }
+
     private void initDrawer() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

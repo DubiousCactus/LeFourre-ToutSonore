@@ -38,6 +38,7 @@ public class Song implements Serializable {
     private Context context;
     private PlayList playlist;
     private ExoPlayer exoPlayer;
+    private String coverUrl;
 
     public Song(Context context, int id, int likes, String title, String artist, String styles, String link, PlayList playlist) {
         this.context = context;
@@ -48,6 +49,7 @@ public class Song implements Serializable {
         this.styles = styles;
         this.link = link;
         this.playlist = playlist;
+        coverUrl = "";
         exoPlayer = ExoPlayer.Factory.newInstance(1);
         exoPlayer.addListener(playlist);
     }
@@ -66,6 +68,7 @@ public class Song implements Serializable {
                     try {
                         final String BASE_URL = response.getString("stream_url");
                         final String CLIENTID_PARAM = "client_id";
+                        coverUrl = response.getString("artwork_url");
                         String key = "c818b360defc350d7e45840b71e117e3";
                         Log.i("SongPLay", "uri : " + BASE_URL);
                         Uri builtUri = Uri.parse(BASE_URL).buildUpon()
@@ -105,6 +108,10 @@ public class Song implements Serializable {
 
     public long getProgress() {
         return exoPlayer.getCurrentPosition();
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
     }
 
     public int getId() {

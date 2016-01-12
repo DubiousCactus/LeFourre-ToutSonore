@@ -109,6 +109,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     public void onPlayWhenReadyCommitted() {
         ipv.start();
         ipv.setMax((int) songList.get(songIndex).getDuration());
+        ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
     }
 
     @Override

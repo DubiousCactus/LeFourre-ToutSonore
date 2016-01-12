@@ -22,9 +22,9 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:text="Retrograde"
         android:textColor="#FFFFFF"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:gravity="center"/>
 
     <TextView
         android:id="@+id/songText"
@@ -32,7 +32,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/singerText"
         android:layout_centerHorizontal="true"
-        android:text="James Blake - Overgrown"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
 
@@ -59,17 +58,23 @@
             app:unselectedAction3="@drawable/replay_unselected" />
 
         <ImageView
+            android:id="@+id/next_song"
             android:layout_width="23dp"
             android:layout_height="23dp"
             android:layout_centerVertical="true"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_marginLeft="10dp"
             android:layout_toRightOf="@+id/ipv"
             android:background="@drawable/icon_forward" />
 
         <ImageView
+            android:id="@+id/previous_song"
             android:layout_width="23dp"
             android:layout_height="23dp"
             android:layout_centerVertical="true"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_marginRight="10dp"
             android:layout_toLeftOf="@+id/ipv"
             android:background="@drawable/icon_back" />

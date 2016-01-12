@@ -16,16 +16,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
 import co.mobiwise.library.InteractivePlayerView;
 import co.mobiwise.library.OnActionClickedListener;
+import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
@@ -59,44 +62,65 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         ipv.setMax(123);
         ipv.setOnActionClickedListener(new OnActionClickedListener() {
             @Override
-            public void onActionClicked(int id) {
-                switch (id) {
-                    case 1:
-                        //Called when 1. action is clicked.
-                        break;
+            public void onActionClicked(int i) {
+                switch (i) {
                     case 2:
                         //Called when 2. action is clicked.
-                        break;
-                    case 3:
-                        //Called when 3. action is clicked.
-                        break;
-                    default:
+                        Log.i("Action", "like");
+                        playlist.likeSong();
                         break;
                 }
             }
         });
+        initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
-        (findViewById(R.id.play_button_layout)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(!playing) {
-                    (findViewById(R.id.control)).setBackground(getResources().getDrawable(R.drawable.pause, getTheme()));
-                    playlist.play(0);
-                    playing = true;
-                } else {
-                    (findViewById(R.id.control)).setBackground(getResources().getDrawable(R.drawable.play, getTheme()));
-                    playlist.pause();
-                    playing = false;
-                }
-            }
-        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
         playing = false;
+    }
+
+    public void initListeners() {
+        final TextView songInfo = (TextView) findViewById(R.id.songText);
+        final TextView sharerInfo = (TextView) findViewById(R.id.singerText);
+        ipv.setCoverDrawable(R.drawable.no_cover);
+        (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ipv.setCoverDrawable(R.drawable.no_cover);
+                playlist.play(playlist.getSongIndex() + 1, songInfo, sharerInfo);
+                playing = true;
+            }
+        });
+
+        (findViewById(R.id.previous_song)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ipv.setCoverDrawable(R.drawable.no_cover);
+                if(playlist.getSongIndex() >= 0) {
+                    playlist.play(playlist.getSongIndex() - 1, songInfo, sharerInfo);
+                    playing = true;
+                }
+            }
+        });
+
+        (findViewById(R.id.play_button_layout)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!playing) {
+                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                    playlist.play(0, songInfo, sharerInfo);
+                    playing = true;
+                } else {
+                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+                    playlist.pause();
+                    playing = false;
+                }
+            }
+        });
     }
 
     private void initDrawer() {
@@ -198,6 +222,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             String songId = (String) it.next(); //Selecting song
             String title = "", artist = "", styles = "", link = "";
             int id = 0, likes = 0;
+            long sharer = 0;
             try {
                 if(response.get(songId) instanceof JSONObject) {
                     JSONObject song = response.getJSONObject(songId);
@@ -209,11 +234,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                         artist = songDetails.getString("artist");
                         styles = songDetails.getString("styles");
                         link = songDetails.getString("link");
+                        sharer = songDetails.getLong("sharerId");
                     }
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(this, id, likes, title, artist, styles, link, playlist);
+            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, playlist);
             playlist.addSong(songItem);
             count++;
         }

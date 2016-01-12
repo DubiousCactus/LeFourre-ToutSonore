@@ -7,9 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.android.volley.Request;
@@ -25,8 +23,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.util.concurrent.ExecutionException;
+
+import okio.Timeout;
 import tk.lefourretoutsonore.lefourre_toutsonore.Launcher;
-import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 
 /**
@@ -52,7 +51,7 @@ public class PollService extends IntentService {
 
         String resultId = fetchLastSound();
         String lastSongSaved = getLastSaved();
-        if (!resultId.equals(lastSongSaved)) {
+        if (!resultId.equals(lastSongSaved) && !resultId.equals("")) {
             Log.i(TAG, "Got a new result: " + resultId);
             Intent myIntent = new Intent(this, Launcher.class);
             myIntent.putExtra("playlist", "all");

@@ -1,19 +1,25 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -83,6 +89,8 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     private PlayListChoice choice;
     private User currentUser;
     private InteractivePlayerView ipv;
+    private TextView songInfo;
+    private TextView sharerInfo;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv) {
         this.name = choice.toString();
@@ -98,7 +106,8 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if(playbackState == ExoPlayer.STATE_ENDED) {
             songIndex++;
-            songList.get(songIndex).play();
+            songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
+            songList.get(songIndex).play(sharerInfo);
         } else if(playbackState == ExoPlayer.STATE_IDLE)
             ipv.stop();
         else
@@ -109,7 +118,10 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     public void onPlayWhenReadyCommitted() {
         ipv.start();
         ipv.setMax((int) songList.get(songIndex).getDuration());
-        ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
+        if(!songList.get(songIndex).getCoverUrl().isEmpty())
+            ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
+        else
+            ipv.setCoverDrawable(R.drawable.no_cover);
     }
 
     @Override
@@ -139,6 +151,10 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
 
     public int getCount() {
         return count;
+    }
+
+    public int getSongIndex() {
+        return songIndex;
     }
 
     public void fetchSounds() {
@@ -182,9 +198,87 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         return success;
     }
 
-    public void play(int songIndex) {
-        songList.get(songIndex).play();
-        Log.i("PlayList", "play");
+    public void likeSong() {
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        StringRequest likeRequest = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/service/addLike.php", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                if(response.equals("true"))
+                    Toast.makeText(context, "Son liké !", Toast.LENGTH_SHORT).show();
+                else if(response.equals("false"))
+                    Toast.makeText(context, "Son déjà liké !", Toast.LENGTH_SHORT).show();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("son", String.valueOf(songList.get(songIndex).getId()));
+                params.put("partageur", String.valueOf(currentUser.getId()));
+
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String,String> params = new HashMap<>();
+                params.put("Content-Type","application/x-www-form-urlencoded");
+                return params;
+            }};
+        requestQueue.add(likeRequest);
+    }
+
+    public boolean getLiked() {
+        final boolean[] isLiked = {false};
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        StringRequest likeRequest = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/service/addLike.php", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                if(response.equals("false"))
+                    isLiked[0] = true;
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<>();
+                params.put("son", String.valueOf(songList.get(songIndex).getId()));
+                params.put("partageur", String.valueOf(currentUser.getId()));
+
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("Content-Type","application/x-www-form-urlencoded");
+                return params;
+            }};
+        requestQueue.add(likeRequest);
+
+        return isLiked[0];
+    }
+
+    public void play(int songIndex, TextView songInfo, TextView sharerInfo) {
+        this.songInfo = songInfo;
+        this.sharerInfo = sharerInfo;
+        if(this.songIndex < songIndex && songIndex > 0) //Next song
+            songList.get(songIndex-1).stop();
+        else if(this.songIndex > songIndex) //Previous song
+            songList.get(songIndex+1).stop();
+
+        songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
+        songList.get(songIndex).play(sharerInfo);
+        ipv.setAction2Selected(getLiked());
+        this.songIndex = songIndex;
     }
 
     public void pause() {

@@ -3,6 +3,8 @@ package tk.lefourretoutsonore.lefourre_toutsonore;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -29,7 +31,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 public class Song implements Serializable {
     private int id;
     private int likes;
-    private int sharer;
+    private long sharer;
     private String title;
     private String artist;
     private String styles;
@@ -40,7 +42,7 @@ public class Song implements Serializable {
     private ExoPlayer exoPlayer;
     private String coverUrl;
 
-    public Song(Context context, int id, int likes, String title, String artist, String styles, String link, PlayList playlist) {
+    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, PlayList playlist) {
         this.context = context;
         this.id = id;
         this.likes = likes;
@@ -49,6 +51,7 @@ public class Song implements Serializable {
         this.styles = styles;
         this.link = link;
         this.playlist = playlist;
+        this.sharer = sharer;
         coverUrl = "";
         exoPlayer = ExoPlayer.Factory.newInstance(1);
         exoPlayer.addListener(playlist);
@@ -57,7 +60,7 @@ public class Song implements Serializable {
     public Song() {
     }
 
-    public void play() {
+    public void play(final TextView sharerInfo) {
         Log.i("Song", "playing");
         if(link.contains("soundcloud")) {
             Log.i("Soundcloud ?", "yep");
@@ -67,12 +70,13 @@ public class Song implements Serializable {
                 public void onResponse(JSONObject response) {
                     try {
                         final String BASE_URL = response.getString("stream_url");
-                        final String CLIENTID_PARAM = "client_id";
                         coverUrl = response.getString("artwork_url");
+                        if(coverUrl != "")
+                            coverUrl = coverUrl.replace("large.jpg", "t300x300.jpg");
                         String key = "c818b360defc350d7e45840b71e117e3";
                         Log.i("SongPLay", "uri : " + BASE_URL);
                         Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-                                .appendQueryParameter(CLIENTID_PARAM, key)
+                                .appendQueryParameter("client_id", key)
                                 .build();
                         // Build the sample source
                         FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
@@ -91,10 +95,23 @@ public class Song implements Serializable {
 
                 }
             });
+            StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(sharer), new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    sharerInfo.setText("Ajouté par " + response);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                }
+            });
             requestQueue.add(request);
+            requestQueue.add(sharerRequest);
         } else {
-            exoPlayer.stop();
+            exoPlayer.release();
             Log.i("Soundcloud ?", "nope");
+            Toast.makeText(context, "Son YouTube, lecture impossible", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -102,8 +119,15 @@ public class Song implements Serializable {
         exoPlayer.stop();
     }
 
+    public void stop() {
+        exoPlayer.stop();
+    }
+
     public long getDuration() {
-        return exoPlayer.getDuration();
+        if(exoPlayer.getDuration() != ExoPlayer.UNKNOWN_TIME)
+            return exoPlayer.getDuration()/1000;
+        else
+            return 123;
     }
 
     public long getProgress() {
@@ -142,7 +166,7 @@ public class Song implements Serializable {
         return description;
     }
 
-    public int getSharer() {
+    public long getSharer() {
         return sharer;
     }
 

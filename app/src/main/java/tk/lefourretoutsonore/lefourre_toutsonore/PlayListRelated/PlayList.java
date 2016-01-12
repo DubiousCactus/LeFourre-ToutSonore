@@ -9,6 +9,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
+import com.google.android.exoplayer.ExoPlaybackException;
+import com.google.android.exoplayer.ExoPlayer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
@@ -40,7 +43,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.User;
 /**
  * Created by transpalette on 1/3/16.
  */
-public class PlayList implements Serializable {
+public class PlayList implements Serializable, ExoPlayer.Listener {
 
     public enum PlayListChoice {
         ALL("ALL", "Tous les sons", "", -1),
@@ -71,19 +74,46 @@ public class PlayList implements Serializable {
         public int getBanId() { return banId; }
     }
 
+
+    private int songIndex;
     private ArrayList<Song> songList;
     private int count;
     private String name;
     private Context context;
     private PlayListChoice choice;
     private User currentUser;
+    private InteractivePlayerView ipv;
 
-    public PlayList(PlayListChoice choice, Context context) {
+    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv) {
         this.name = choice.toString();
         this.choice = choice;
         this.context = context;
         songList = new ArrayList<>();
         count = 0;
+        this.ipv = ipv;
+        songIndex = 0;
+    }
+
+    @Override
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        if(playbackState == ExoPlayer.STATE_ENDED) {
+            songIndex++;
+            songList.get(songIndex).play();
+        } else if(playbackState == ExoPlayer.STATE_IDLE)
+            ipv.stop();
+        else
+            ipv.setProgress((int) songList.get(songIndex).getProgress());
+    }
+
+    @Override
+    public void onPlayWhenReadyCommitted() {
+        ipv.start();
+        ipv.setMax((int) songList.get(songIndex).getDuration());
+    }
+
+    @Override
+    public void onPlayerError(ExoPlaybackException error) {
+
     }
 
     public void addSong(Song song) {
@@ -138,7 +168,7 @@ public class PlayList implements Serializable {
         FileInputStream fis = null;
         boolean success = true;
         try {
-            fis = context.openFileInput("playList"+name+".lst");
+            fis = context.openFileInput("playList" + name + ".lst");
             ObjectInputStream ois = new ObjectInputStream(fis);
             songList.clear();
             count = ois.readInt();
@@ -151,5 +181,12 @@ public class PlayList implements Serializable {
         return success;
     }
 
+    public void play(int songIndex) {
+        songList.get(songIndex).play();
+        Log.i("PlayList", "play");
+    }
 
+    public void pause() {
+        songList.get(songIndex).pause();
+    }
 }

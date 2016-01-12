@@ -110,7 +110,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
 
     public void fetchCount(final EventViewHolder holder, final int position) {
         Log.i("fetchCount", "Fetching count for " + holder.title.getText());
-        PlayList pl = new PlayList(choiceSource[position], context);
+        PlayList pl = new PlayList(choiceSource[position], context, null);
         if(pl.retrieveFromDisk())
             holder.counter.setText(pl.getCount() + " ajouts");
     }

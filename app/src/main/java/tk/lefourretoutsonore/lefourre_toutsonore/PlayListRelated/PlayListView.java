@@ -2,6 +2,7 @@ package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,6 +13,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.*;
 
 import com.android.volley.Response;
@@ -41,17 +43,20 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private PlayList.PlayListChoice choice;
     private User currentUser;
     private ProgressDialog dialog;
+    private InteractivePlayerView ipv;
+    private boolean playing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        playing = false;
         choice = (PlayList.PlayListChoice) getIntent().getSerializableExtra("choice");
         currentUser = (User) getIntent().getSerializableExtra("user");
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
-        InteractivePlayerView ipv = (InteractivePlayerView) findViewById(R.id.ipv);
-        ipv.setMax(123); // music duration in seconds.
+        ipv = (InteractivePlayerView) findViewById(R.id.ipv);
+        ipv.setMax(123);
         ipv.setOnActionClickedListener(new OnActionClickedListener() {
             @Override
             public void onActionClicked(int id) {
@@ -72,7 +77,20 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         });
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
-        ipv.start();
+        (findViewById(R.id.play_button_layout)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!playing) {
+                    (findViewById(R.id.control)).setBackground(getResources().getDrawable(R.drawable.pause, getTheme()));
+                    playlist.play(0);
+                    playing = true;
+                } else {
+                    (findViewById(R.id.control)).setBackground(getResources().getDrawable(R.drawable.play, getTheme()));
+                    playlist.pause();
+                    playing = false;
+                }
+            }
+        });
     }
 
     private void initDrawer() {
@@ -112,7 +130,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     private void populate(PlayList.PlayListChoice choice) {
-        playlist = new PlayList(choice, this);
+        playlist = new PlayList(choice, this, ipv);
         if(choice == PlayList.PlayListChoice.LIKES) {
             playlist.setCurrentUser(currentUser);
             Log.i("id", "id = " + currentUser.getId());
@@ -189,7 +207,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(id, likes, title, artist, styles, link);
+            Song songItem = new Song(this, id, likes, title, artist, styles, link, playlist);
             playlist.addSong(songItem);
             count++;
         }

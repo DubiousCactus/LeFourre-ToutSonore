@@ -101,7 +101,7 @@ public class PollService extends IntentService {
     }
 
     public String fetchLastSound() {
-        String lastSong = "null";
+        String lastSong = "";
         RequestFuture<String> future = RequestFuture.newFuture();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         String url = "http://lefourretoutsonore.tk/service/getLastSong.php";

@@ -91,20 +91,24 @@
         android:layout_alignParentBottom="true"/>
 
     <RelativeLayout
+        android:id="@+id/play_button_layout"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:background="@drawable/circle"
         android:layout_alignTop="@+id/imageBottom"
         android:layout_marginTop="-30dp"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="20dp">
+        android:layout_marginRight="20dp"
+        android:clickable="true"
+        android:focusable="true" >
 
         <ImageView
             android:id="@+id/control"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_centerInParent="true"
-            android:background="@drawable/play"/>
+            android:background="@drawable/play"
+            android:duplicateParentState="true" />
 
     </RelativeLayout>
 

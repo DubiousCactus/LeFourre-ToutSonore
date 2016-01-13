@@ -70,9 +70,7 @@ public class Song implements Serializable {
                 public void onResponse(JSONObject response) {
                     try {
                         final String BASE_URL = response.getString("stream_url");
-                        coverUrl = response.getString("artwork_url");
-                        if(coverUrl != "")
-                            coverUrl = coverUrl.replace("large.jpg", "t300x300.jpg");
+                        coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
                         String key = "c818b360defc350d7e45840b71e117e3";
                         Uri builtUri = Uri.parse(BASE_URL).buildUpon()
                                 .appendQueryParameter("client_id", key)

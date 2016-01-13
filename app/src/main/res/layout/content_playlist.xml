@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:gravity="center"/>
@@ -34,6 +34,15 @@
         android:layout_centerHorizontal="true"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/likesCountText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/songText"
+        android:layout_centerHorizontal="true"
+        android:textColor="#ff4a4a"
+        android:textSize="10sp" />
 
     <RelativeLayout
         android:id="@+id/layoutSet"

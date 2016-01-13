@@ -91,6 +91,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     private InteractivePlayerView ipv;
     private TextView songInfo;
     private TextView sharerInfo;
+    private TextView likesInfo;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
@@ -234,19 +235,21 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         requestQueue.add(likeRequest);
     }
 
-    public void play(int songIndex, TextView songInfo, TextView sharerInfo) {
+    public void play(int songIndex, TextView songInfo, TextView sharerInfo, TextView likesInfo) {
         this.songInfo = songInfo;
         this.sharerInfo = sharerInfo;
+        this.likesInfo = likesInfo;
         if(this.songIndex < songIndex && songIndex > 0) //Next song
             songList.get(songIndex-1).stop();
         else if(this.songIndex > songIndex) //Previous song
             songList.get(songIndex+1).stop();
 
         songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
+        likesInfo.setText(songList.get(songIndex).getLikes() + " ♥");
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
-        songList.get(songIndex).play(sharerInfo);
+        songList.get(songIndex).play(sharerInfo); //Why there ???
         this.songIndex = songIndex;
     }
 

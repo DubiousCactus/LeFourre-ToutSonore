@@ -50,6 +50,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private boolean playing;
     private TextView songInfo;
     private TextView sharerInfo;
+    private TextView likesInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,11 +87,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     public void initListeners() {
         songInfo = (TextView) findViewById(R.id.songText);
         sharerInfo = (TextView) findViewById(R.id.singerText);
+        likesInfo = (TextView) findViewById(R.id.likesCountText);
         ipv.setCoverDrawable(R.drawable.no_cover);
         (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playlist.play(playlist.getSongIndex() + 1, songInfo, sharerInfo);
+                playlist.play(playlist.getSongIndex() + 1, songInfo, sharerInfo, likesInfo);
                 playing = true;
             }
         });
@@ -99,7 +101,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public void onClick(View v) {
                 if(playlist.getSongIndex() >= 0) {
-                    playlist.play(playlist.getSongIndex() - 1, songInfo, sharerInfo);
+                    playlist.play(playlist.getSongIndex() - 1, songInfo, sharerInfo, likesInfo);
                     playing = true;
                 }
             }
@@ -110,7 +112,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onClick(View v) {
                 if (!playing) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    playlist.play(playlist.getSongIndex(), songInfo, sharerInfo);
+                    playlist.play(playlist.getSongIndex(), songInfo, sharerInfo, likesInfo);
                     playing = true;
                 } else {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
@@ -254,7 +256,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playing = true;
                 playlist.pause();
-                playlist.play(position, songInfo, sharerInfo);
+                playlist.play(position, songInfo, sharerInfo, likesInfo);
             }
         });
         dialog.dismiss();

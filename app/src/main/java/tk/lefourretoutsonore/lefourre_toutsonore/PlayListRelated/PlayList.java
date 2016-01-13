@@ -92,10 +92,11 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     private TextView songInfo;
     private TextView sharerInfo;
 
-    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv) {
+    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
         this.choice = choice;
         this.context = context;
+        this.currentUser = currentUser;
         songList = new ArrayList<>();
         count = 0;
         this.ipv = ipv;
@@ -165,7 +166,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         if(choice == PlayListChoice.LIKES)
             url = "http://lefourretoutsonore.tk/service/getLikesPlaylist.php?sharer=" + currentUser.getId();
         else
-            url = "http://lefourretoutsonore.tk/service/getPlaylistAsJson.php?choice=" + choice.getId();
+            url = "http://lefourretoutsonore.tk/service/getPlaylistAsJson.php?choice=" + choice.getId() + "&user=" + currentUser.getId();
         CustomRequest jsObjRequest = new CustomRequest(url, params, (Response.Listener<JSONObject>) context, (Response.ErrorListener) context);
         requestQueue.add(jsObjRequest);
     }
@@ -232,41 +233,6 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         requestQueue.add(likeRequest);
     }
 
-    public boolean getLiked() {
-        final boolean[] isLiked = {false};
-        RequestQueue requestQueue = Volley.newRequestQueue(context);
-        StringRequest likeRequest = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/service/addLike.php", new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                if(response.equals("false"))
-                    isLiked[0] = true;
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
-            }
-        }){
-            @Override
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<>();
-                params.put("son", String.valueOf(songList.get(songIndex).getId()));
-                params.put("partageur", String.valueOf(currentUser.getId()));
-
-                return params;
-            }
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("Content-Type","application/x-www-form-urlencoded");
-                return params;
-            }};
-        requestQueue.add(likeRequest);
-
-        return isLiked[0];
-    }
-
     public void play(int songIndex, TextView songInfo, TextView sharerInfo) {
         this.songInfo = songInfo;
         this.sharerInfo = sharerInfo;
@@ -276,8 +242,10 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
             songList.get(songIndex+1).stop();
 
         songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
+        ipv.setAction2Selected(songList.get(songIndex).getLiked());
+        ipv.setCoverDrawable(R.drawable.no_cover);
+        ipv.setProgress(0);
         songList.get(songIndex).play(sharerInfo);
-        ipv.setAction2Selected(getLiked());
         this.songIndex = songIndex;
     }
 

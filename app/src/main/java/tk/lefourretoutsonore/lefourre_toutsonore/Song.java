@@ -41,8 +41,9 @@ public class Song implements Serializable {
     private PlayList playlist;
     private ExoPlayer exoPlayer;
     private String coverUrl;
+    private boolean liked;
 
-    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, PlayList playlist) {
+    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, boolean liked, PlayList playlist) {
         this.context = context;
         this.id = id;
         this.likes = likes;
@@ -52,6 +53,7 @@ public class Song implements Serializable {
         this.link = link;
         this.playlist = playlist;
         this.sharer = sharer;
+        this.liked = liked;
         coverUrl = "";
         exoPlayer = ExoPlayer.Factory.newInstance(1);
         exoPlayer.addListener(playlist);
@@ -61,9 +63,7 @@ public class Song implements Serializable {
     }
 
     public void play(final TextView sharerInfo) {
-        Log.i("Song", "playing");
         if(link.contains("soundcloud")) {
-            Log.i("Soundcloud ?", "yep");
             RequestQueue requestQueue = Volley.newRequestQueue(context);
             CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + link + "&client_id=c818b360defc350d7e45840b71e117e3" , null, new Response.Listener<JSONObject>() {
                 @Override
@@ -74,7 +74,6 @@ public class Song implements Serializable {
                         if(coverUrl != "")
                             coverUrl = coverUrl.replace("large.jpg", "t300x300.jpg");
                         String key = "c818b360defc350d7e45840b71e117e3";
-                        Log.i("SongPLay", "uri : " + BASE_URL);
                         Uri builtUri = Uri.parse(BASE_URL).buildUpon()
                                 .appendQueryParameter("client_id", key)
                                 .build();
@@ -110,7 +109,6 @@ public class Song implements Serializable {
             requestQueue.add(sharerRequest);
         } else {
             exoPlayer.release();
-            Log.i("Soundcloud ?", "nope");
             Toast.makeText(context, "Son YouTube, lecture impossible", Toast.LENGTH_SHORT).show();
         }
     }
@@ -160,6 +158,10 @@ public class Song implements Serializable {
 
     public int getLikes() {
         return likes;
+    }
+
+    public boolean getLiked() {
+        return liked;
     }
 
     public String getDescription() {

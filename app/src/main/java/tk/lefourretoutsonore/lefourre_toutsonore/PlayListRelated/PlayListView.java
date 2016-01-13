@@ -48,6 +48,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
     private boolean playing;
+    private TextView songInfo;
+    private TextView sharerInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,13 +86,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     public void initListeners() {
-        final TextView songInfo = (TextView) findViewById(R.id.songText);
-        final TextView sharerInfo = (TextView) findViewById(R.id.singerText);
+        songInfo = (TextView) findViewById(R.id.songText);
+        sharerInfo = (TextView) findViewById(R.id.singerText);
         ipv.setCoverDrawable(R.drawable.no_cover);
         (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ipv.setCoverDrawable(R.drawable.no_cover);
                 playlist.play(playlist.getSongIndex() + 1, songInfo, sharerInfo);
                 playing = true;
             }
@@ -99,7 +100,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         (findViewById(R.id.previous_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ipv.setCoverDrawable(R.drawable.no_cover);
                 if(playlist.getSongIndex() >= 0) {
                     playlist.play(playlist.getSongIndex() - 1, songInfo, sharerInfo);
                     playing = true;
@@ -112,7 +112,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onClick(View v) {
                 if (!playing) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    playlist.play(0, songInfo, sharerInfo);
+                    playlist.play(playlist.getSongIndex(), songInfo, sharerInfo);
                     playing = true;
                 } else {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
@@ -160,7 +160,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     private void populate(PlayList.PlayListChoice choice) {
-        playlist = new PlayList(choice, this, ipv);
+        playlist = new PlayList(choice, this, ipv, currentUser);
         if(choice == PlayList.PlayListChoice.LIKES) {
             playlist.setCurrentUser(currentUser);
             Log.i("id", "id = " + currentUser.getId());
@@ -223,6 +223,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             String title = "", artist = "", styles = "", link = "";
             int id = 0, likes = 0;
             long sharer = 0;
+            boolean liked = false;
             try {
                 if(response.get(songId) instanceof JSONObject) {
                     JSONObject song = response.getJSONObject(songId);
@@ -235,11 +236,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                         styles = songDetails.getString("styles");
                         link = songDetails.getString("link");
                         sharer = songDetails.getLong("sharerId");
+                        liked = songDetails.getBoolean("liked");
                     }
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, playlist);
+            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, liked, playlist);
             playlist.addSong(songItem);
             count++;
         }
@@ -248,6 +250,14 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         listView = (ListView) findViewById(R.id.songsList);
         PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                (findViewById(R.id.play_button_layout)).callOnClick();
+                playlist.pause();
+                playlist.play(position, songInfo, sharerInfo);
+            }
+        });
         dialog.dismiss();
     }
 }

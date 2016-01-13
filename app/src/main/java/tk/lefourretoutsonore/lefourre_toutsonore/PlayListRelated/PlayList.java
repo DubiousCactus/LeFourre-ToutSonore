@@ -207,7 +207,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
                 if(response.equals("true"))
                     Toast.makeText(context, "Son liké !", Toast.LENGTH_SHORT).show();
                 else if(response.equals("false"))
-                    Toast.makeText(context, "Son déjà liké !", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Son dé-liké !", Toast.LENGTH_SHORT).show();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -220,6 +220,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
                 Map<String,String> params = new HashMap<String, String>();
                 params.put("son", String.valueOf(songList.get(songIndex).getId()));
                 params.put("partageur", String.valueOf(currentUser.getId()));
+                params.put("liked", String.valueOf(songList.get(songIndex).getLiked()));
 
                 return params;
             }

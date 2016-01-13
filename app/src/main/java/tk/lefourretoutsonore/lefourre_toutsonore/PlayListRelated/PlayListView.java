@@ -67,8 +67,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onActionClicked(int i) {
                 switch (i) {
                     case 2:
-                        //Called when 2. action is clicked.
-                        Log.i("Action", "like");
                         playlist.likeSong();
                         break;
                 }
@@ -253,7 +251,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                (findViewById(R.id.play_button_layout)).callOnClick();
+                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                playing = true;
                 playlist.pause();
                 playlist.play(position, songInfo, sharerInfo);
             }

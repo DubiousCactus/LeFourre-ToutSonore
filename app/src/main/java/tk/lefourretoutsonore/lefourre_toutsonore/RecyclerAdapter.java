@@ -16,10 +16,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventViewHolder> {
-    private PlayList.PlayListChoice[] choiceSource;
+    private PlayListChoice[] choiceSource;
     private Context context;
     private User currentUser;
 
@@ -45,7 +46,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         }
     }
 
-    public RecyclerAdapter(PlayList.PlayListChoice[] choiceArgs, Context context, User currentUser) {
+    public RecyclerAdapter(PlayListChoice[] choiceArgs, Context context, User currentUser) {
         this.context = context;
         choiceSource = choiceArgs;
         this.currentUser = currentUser;

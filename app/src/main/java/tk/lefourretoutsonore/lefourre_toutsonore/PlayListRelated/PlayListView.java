@@ -25,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -45,7 +46,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private NavigationView navigationView;
     private PlayList playlist;
     private ListView listView;
-    private PlayList.PlayListChoice choice;
+    private PlayListChoice choice;
     private User currentUser;
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
@@ -56,7 +57,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         playing = false;
-        choice = (PlayList.PlayListChoice) getIntent().getSerializableExtra("choice");
+        choice = (PlayListChoice) getIntent().getSerializableExtra("choice");
         currentUser = (User) getIntent().getSerializableExtra("user");
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
@@ -139,6 +140,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 } else if (id == R.id.nav_home) {
                     Intent myIntent = new Intent(PlayListView.this, Main.class);
                     myIntent.putExtra("user", currentUser);
+                    myIntent.putExtra("choice", choice);
+                    myIntent.putExtra("songIndex", playlist.getSongIndex());
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     setTitle(choice.LIKES.getLongName());
@@ -158,7 +161,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         toggle.syncState();
     }
 
-    private void populate(PlayList.PlayListChoice choice) {
+    private void populate(PlayListChoice choice) {
         TextView songInfo = (TextView) findViewById(R.id.songText);
         TextView sharerInfo = (TextView) findViewById(R.id.singerText);
         TextView likesInfo = (TextView) findViewById(R.id.likesCountText);
@@ -168,7 +171,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         TextView songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         playlist = new PlayList(choice, this, ipv, currentUser);
         playlist.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
-        if(choice == PlayList.PlayListChoice.LIKES) {
+        if(choice == PlayListChoice.LIKES) {
             playlist.setCurrentUser(currentUser);
             Log.i("id", "id = " + currentUser.getId());
         }
@@ -244,7 +247,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                         link = songDetails.getString("link");
                         sharer = songDetails.getLong("sharerId");
                         liked = songDetails.getBoolean("liked");
-                        description = songDetails.getString("description");
+                        if(!songDetails.getString("description").equals(""))
+                            description = songDetails.getString("description");
                     }
                 }
             } catch (JSONException e) { e.printStackTrace(); }

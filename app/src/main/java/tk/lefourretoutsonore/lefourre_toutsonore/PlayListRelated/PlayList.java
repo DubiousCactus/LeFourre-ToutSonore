@@ -2,6 +2,8 @@ package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +18,9 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.FrameworkSampleSource;
+import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.TrackRenderer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,37 +54,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.User;
 /**
  * Created by transpalette on 1/3/16.
  */
-public class PlayList implements Serializable, ExoPlayer.Listener {
-
-    public enum PlayListChoice {
-        ALL("ALL", "Tous les sons", "", -1),
-        LIKES("LIKES", "Mes likes", "", -1),
-        REGGAE("1", "Reggae", "Roots - Dub - Raga - Jungle", R.drawable.ban_reggae),
-        ELECTRO("2", "Electro", "House - Techno - Minimale - Tribe", R.drawable.ban_electro),
-        TRANCE("3", "Trance", "Progressive - Goa - Forest - Tribal", R.drawable.ban_trance),
-        POP("5", "Pop", "Variété française - Soul - Country - Pop Rock", R.drawable.ban_pop),
-        CORE("6", "Core", "Frenchcore - Hardcore - Hardtek - Acidcore", R.drawable.ban_core),
-        HIPHOP("7", "Hip-Hop", "Trap - Rap - R'n'B - Trip Hop", R.drawable.ban_hiphop),
-        ROCK("4", "Rock n' Roll", "Folk - Hard Rock - Blues - Jazz", R.drawable.ban_rock);
-
-        private String id;
-        private String longName;
-        private String desc;
-        private int banId;
-
-        PlayListChoice(String id, String longName, String desc, int banId) {
-            this.id = id;
-            this.longName = longName;
-            this.desc = desc;
-            this.banId = banId;
-        }
-
-        public String getId() { return id; }
-        public String getLongName() { return longName; }
-        public String getDesc() { return desc; }
-        public int getBanId() { return banId; }
-    }
-
+public class PlayList implements ExoPlayer.Listener, Serializable {
 
     private int songIndex;
     private ArrayList<Song> songList;
@@ -96,6 +71,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     private TextView descriptionInfo;
     private TextView songTitleInfo;
     private TextView songArtistInfo;
+    private ExoPlayer exoPlayer;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
@@ -106,6 +82,8 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         count = 0;
         this.ipv = ipv;
         songIndex = 0;
+        exoPlayer = ExoPlayer.Factory.newInstance(1);
+        exoPlayer.addListener(this);
     }
 
     @Override
@@ -113,7 +91,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         if(playbackState == ExoPlayer.STATE_ENDED) {
             songIndex++;
             updateSongInfoDisplay();
-            songList.get(songIndex).play(sharerInfo);
+            play(songIndex);
         } else if(playbackState == ExoPlayer.STATE_IDLE)
             ipv.stop();
     }
@@ -121,7 +99,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     @Override
     public void onPlayWhenReadyCommitted() {
         ipv.start();
-        ipv.setMax((int) songList.get(songIndex).getDuration());
+        ipv.setMax((int) getSongDuration());
         if(!songList.get(songIndex).getCoverUrl().isEmpty())
             ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
         else
@@ -187,7 +165,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     public void saveOnDisk() {
         FileOutputStream fos = null;
         try {
-            fos = context.openFileOutput("playList"+name+".lst", Context.MODE_PRIVATE);
+            fos = context.openFileOutput("playList" + name, Context.MODE_PRIVATE);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeInt(count);
             oos.writeObject(songList);
@@ -199,7 +177,7 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         FileInputStream fis = null;
         boolean success = true;
         try {
-            fis = context.openFileInput("playList" + name + ".lst");
+            fis = context.openFileInput("playList" + name);
             ObjectInputStream ois = new ObjectInputStream(fis);
             songList.clear();
             count = ois.readInt();
@@ -248,21 +226,73 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     }
 
     public void play(int songIndex) {
-        if(this.songIndex < songIndex && songIndex > 0) //Next song
-            songList.get(songIndex-1).stop();
-        else if(this.songIndex > songIndex) //Previous song
-            songList.get(songIndex+1).stop();
-
+        pause();
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
         updateSongInfoDisplay();
-        songList.get(songIndex).play(sharerInfo); //Why there ???
+        final Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
+        updateSongInfoDisplay();
+
+        if(currentSong.getLink().contains("soundcloud")) {
+            RequestQueue requestQueue = Volley.newRequestQueue(context);
+            CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3" , null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        final String BASE_URL = response.getString("stream_url");
+                        String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
+                        currentSong.setCoverUrl(coverUrl);
+                        String key = "c818b360defc350d7e45840b71e117e3";
+                        Uri builtUri = Uri.parse(BASE_URL).buildUpon()
+                                .appendQueryParameter("client_id", key)
+                                .build();
+                        // Build the sample source
+                        FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
+                        // Build the track renderers
+                        TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+                        // Build the ExoPlayer and start playback
+                        exoPlayer.prepare(audioRenderer);
+                        exoPlayer.setPlayWhenReady(true);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
+                }
+            });
+            StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    sharerInfo.setText("Ajouté par " + response);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                }
+            });
+            requestQueue.add(request);
+            requestQueue.add(sharerRequest);
+        } else {
+            exoPlayer.release();
+            Toast.makeText(context, "Son YouTube, lecture impossible", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void pause() {
-        songList.get(songIndex).pause();
+        exoPlayer.stop();
+    }
+
+    public long getSongDuration() {
+        if(exoPlayer.getDuration() != ExoPlayer.UNKNOWN_TIME)
+            return exoPlayer.getDuration()/1000;
+        else
+            return 123;
     }
 
     private void updateSongInfoDisplay() {

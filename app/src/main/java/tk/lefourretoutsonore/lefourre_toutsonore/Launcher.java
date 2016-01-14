@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 import tk.lefourretoutsonore.lefourre_toutsonore.service.PollService;
 
@@ -86,7 +87,7 @@ public class Launcher extends AppCompatActivity {
             if(getIntent().getStringExtra("playlist") != null) {
                 myIntent = new Intent(Launcher.this, PlayListView.class);
                 if(getIntent().getStringExtra("playlist").equals("all"))
-                    myIntent.putExtra("choice", PlayList.PlayListChoice.ALL);
+                    myIntent.putExtra("choice", PlayListChoice.ALL);
             } else if(!toShareWeGo)
                 myIntent = new Intent(Launcher.this, Main.class);
 

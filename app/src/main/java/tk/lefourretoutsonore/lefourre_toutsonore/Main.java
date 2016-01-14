@@ -10,12 +10,22 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
+import java.io.Serializable;
+
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlaylistAdapter;
 
 public class Main extends AppCompatActivity {
 
@@ -24,9 +34,12 @@ public class Main extends AppCompatActivity {
     private RecyclerView.LayoutManager layoutManager;
     private NavigationView navigationView;
     private User currentUser;
+    private SlidingUpPanelLayout slidingLayout;
+    private PlayList playlist;
+    private ListView listView;
 
-    private PlayList.PlayListChoice[] titleArray = new PlayList.PlayListChoice[]{PlayList.PlayListChoice.REGGAE, PlayList.PlayListChoice.ELECTRO,
-            PlayList.PlayListChoice.TRANCE, PlayList.PlayListChoice.POP, PlayList.PlayListChoice.CORE, PlayList.PlayListChoice.HIPHOP, PlayList.PlayListChoice.ROCK};
+    private PlayListChoice[] titleArray = new PlayListChoice[]{PlayListChoice.REGGAE, PlayListChoice.ELECTRO,
+            PlayListChoice.TRANCE, PlayListChoice.POP, PlayListChoice.CORE, PlayListChoice.HIPHOP, PlayListChoice.ROCK};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +51,27 @@ public class Main extends AppCompatActivity {
         initCards();
         initDrawer();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
+        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        if((getIntent().getSerializableExtra("choice")) != null) {
+            playlist = new PlayList((PlayListChoice) getIntent().getSerializableExtra("choice"), this, null, currentUser);
+            playlist.retrieveFromDisk();
+            slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            listView = (ListView) findViewById(R.id.songsList);
+            PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                    playlist.pause();
+                    Log.i("clickList", "item : " + position);
+                    playlist.play(position);
+                    slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                }
+            });
+        } else {
+            slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+        }
     }
 
     public void initDrawer() {
@@ -51,11 +85,8 @@ public class Main extends AppCompatActivity {
                 int id = item.getItemId();
                 Intent myIntent = new Intent(Main.this, PlayListView.class);
 
-                if (id == R.id.nav_home) {
-                    myIntent.putExtra("playlist", 0);
-                    Main.this.startActivity(myIntent);
-                } else if (id == R.id.nav_all) {
-                    myIntent.putExtra("choice", PlayList.PlayListChoice.ALL);
+                if (id == R.id.nav_all) {
+                    myIntent.putExtra("choice", PlayListChoice.ALL);
                     myIntent.putExtra("user", currentUser);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_ranking) {
@@ -63,7 +94,7 @@ public class Main extends AppCompatActivity {
                     myIntent.putExtra("playlist", 3);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
-                    myIntent.putExtra("choice", PlayList.PlayListChoice.LIKES);
+                    myIntent.putExtra("choice", PlayListChoice.LIKES);
                     myIntent.putExtra("user", currentUser);
                     Main.this.startActivity(myIntent);
                 }

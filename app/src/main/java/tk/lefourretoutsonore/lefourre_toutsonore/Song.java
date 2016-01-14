@@ -43,7 +43,7 @@ public class Song implements Serializable {
     private String coverUrl;
     private boolean liked;
 
-    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, boolean liked, PlayList playlist) {
+    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, String description, boolean liked, PlayList playlist) {
         this.context = context;
         this.id = id;
         this.likes = likes;
@@ -54,6 +54,7 @@ public class Song implements Serializable {
         this.playlist = playlist;
         this.sharer = sharer;
         this.liked = liked;
+        this.description = description;
         coverUrl = "";
         exoPlayer = ExoPlayer.Factory.newInstance(1);
         exoPlayer.addListener(playlist);

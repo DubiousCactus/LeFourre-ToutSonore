@@ -34,4 +34,5 @@ dependencies {
     compile 'com.google.android.exoplayer:exoplayer:r1.5.0'
     // okhttp requests
     compile 'com.squareup.okhttp:okhttp:2.4.0'
+    compile 'com.sothree.slidinguppanel:library:3.2.1'
 }

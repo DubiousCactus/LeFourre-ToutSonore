@@ -19,9 +19,11 @@ import android.widget.*;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,9 +50,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
     private boolean playing;
-    private TextView songInfo;
-    private TextView sharerInfo;
-    private TextView likesInfo;
+    private SlidingUpPanelLayout slidingLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +61,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
+        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
         ipv = (InteractivePlayerView) findViewById(R.id.ipv);
         ipv.setMax(123);
         ipv.setOnActionClickedListener(new OnActionClickedListener() {
@@ -85,14 +87,11 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     public void initListeners() {
-        songInfo = (TextView) findViewById(R.id.songText);
-        sharerInfo = (TextView) findViewById(R.id.singerText);
-        likesInfo = (TextView) findViewById(R.id.likesCountText);
         ipv.setCoverDrawable(R.drawable.no_cover);
         (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playlist.play(playlist.getSongIndex() + 1, songInfo, sharerInfo, likesInfo);
+                playlist.play(playlist.getSongIndex() + 1);
                 playing = true;
             }
         });
@@ -101,7 +100,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public void onClick(View v) {
                 if(playlist.getSongIndex() >= 0) {
-                    playlist.play(playlist.getSongIndex() - 1, songInfo, sharerInfo, likesInfo);
+                    playlist.play(playlist.getSongIndex() - 1);
                     playing = true;
                 }
             }
@@ -112,7 +111,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onClick(View v) {
                 if (!playing) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    playlist.play(playlist.getSongIndex(), songInfo, sharerInfo, likesInfo);
+                    playlist.play(playlist.getSongIndex());
                     playing = true;
                 } else {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
@@ -160,7 +159,15 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     private void populate(PlayList.PlayListChoice choice) {
+        TextView songInfo = (TextView) findViewById(R.id.songText);
+        TextView sharerInfo = (TextView) findViewById(R.id.singerText);
+        TextView likesInfo = (TextView) findViewById(R.id.likesCountText);
+        TextView stylesInfo = (TextView) findViewById(R.id.stylesText);
+        TextView descriptionInfo = (TextView) findViewById(R.id.descriptionText);
+        TextView songTitleSlider = (TextView) findViewById(R.id.listHeader);
+        TextView songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         playlist = new PlayList(choice, this, ipv, currentUser);
+        playlist.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
         if(choice == PlayList.PlayListChoice.LIKES) {
             playlist.setCurrentUser(currentUser);
             Log.i("id", "id = " + currentUser.getId());
@@ -220,7 +227,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         int count = 0;
         for(Iterator it = response.keys(); it.hasNext();) { //Parsing list of songs
             String songId = (String) it.next(); //Selecting song
-            String title = "", artist = "", styles = "", link = "";
+            String title = "", artist = "", styles = "", link = "", description = "Aucune description";
             int id = 0, likes = 0;
             long sharer = 0;
             boolean liked = false;
@@ -237,11 +244,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                         link = songDetails.getString("link");
                         sharer = songDetails.getLong("sharerId");
                         liked = songDetails.getBoolean("liked");
+                        description = songDetails.getString("description");
                     }
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, liked, playlist);
+            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, description, liked, playlist);
             playlist.addSong(songItem);
             count++;
         }
@@ -256,7 +264,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playing = true;
                 playlist.pause();
-                playlist.play(position, songInfo, sharerInfo, likesInfo);
+                Log.i("clickList", "item : " + position);
+                playlist.play(position);
+                slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
         dialog.dismiss();

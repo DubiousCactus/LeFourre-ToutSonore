@@ -92,6 +92,10 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     private TextView songInfo;
     private TextView sharerInfo;
     private TextView likesInfo;
+    private TextView stylesInfo;
+    private TextView descriptionInfo;
+    private TextView songTitleInfo;
+    private TextView songArtistInfo;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
@@ -108,12 +112,10 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if(playbackState == ExoPlayer.STATE_ENDED) {
             songIndex++;
-            songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
+            updateSongInfoDisplay();
             songList.get(songIndex).play(sharerInfo);
         } else if(playbackState == ExoPlayer.STATE_IDLE)
             ipv.stop();
-        else
-            ipv.setProgress((int) songList.get(songIndex).getProgress());
     }
 
     @Override
@@ -133,6 +135,16 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
 
     public void addSong(Song song) {
         songList.add(song);
+    }
+
+    public void setSongInfoDisplay(TextView songInfo, TextView sharerInfo, TextView likesInfo, TextView stylesInfo, TextView descriptionInfo, TextView songArtistInfo, TextView songTitleInfo) {
+        this.songInfo = songInfo;
+        this.sharerInfo = sharerInfo;
+        this.likesInfo = likesInfo;
+        this.stylesInfo = stylesInfo;
+        this.descriptionInfo = descriptionInfo;
+        this.songTitleInfo = songTitleInfo;
+        this.songArtistInfo = songArtistInfo;
     }
 
     public void setCount(int count) {
@@ -235,25 +247,31 @@ public class PlayList implements Serializable, ExoPlayer.Listener {
         requestQueue.add(likeRequest);
     }
 
-    public void play(int songIndex, TextView songInfo, TextView sharerInfo, TextView likesInfo) {
-        this.songInfo = songInfo;
-        this.sharerInfo = sharerInfo;
-        this.likesInfo = likesInfo;
+    public void play(int songIndex) {
         if(this.songIndex < songIndex && songIndex > 0) //Next song
             songList.get(songIndex-1).stop();
         else if(this.songIndex > songIndex) //Previous song
             songList.get(songIndex+1).stop();
 
-        songInfo.setText(songList.get(songIndex).getArtist() + " - " + songList.get(songIndex).getTitle());
-        likesInfo.setText(songList.get(songIndex).getLikes() + " ♥");
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
+        updateSongInfoDisplay();
         songList.get(songIndex).play(sharerInfo); //Why there ???
         this.songIndex = songIndex;
     }
 
     public void pause() {
         songList.get(songIndex).pause();
+    }
+
+    private void updateSongInfoDisplay() {
+        Song currentSong = songList.get(songIndex);
+        songInfo.setText(currentSong.getArtist() + " - " + songList.get(songIndex).getTitle());
+        likesInfo.setText(currentSong.getLikes() + " ♥");
+        stylesInfo.setText(currentSong.getStyles());
+        descriptionInfo.setText(currentSong.getDescription());
+        songArtistInfo.setText(currentSong.getArtist());
+        songTitleInfo.setText(currentSong.getTitle());
     }
 }

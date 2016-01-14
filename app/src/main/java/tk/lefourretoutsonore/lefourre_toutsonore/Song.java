@@ -17,21 +17,16 @@ public class Song implements Serializable {
     private String styles;
     private String link;
     private String description;
-    private Context context;
-    private PlayList playlist;
-
     private String coverUrl;
     private boolean liked;
 
-    public Song(Context context, int id, int likes, long sharer, String title, String artist, String styles, String link, String description, boolean liked, PlayList playlist) {
-        this.context = context;
+    public Song(int id, int likes, long sharer, String title, String artist, String styles, String link, String description, boolean liked, PlayList playlist) {
         this.id = id;
         this.likes = likes;
         this.title = title;
         this.artist = artist;
         this.styles = styles;
         this.link = link;
-        this.playlist = playlist;
         this.sharer = sharer;
         this.liked = liked;
         this.description = description;

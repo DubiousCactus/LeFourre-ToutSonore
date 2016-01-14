@@ -253,7 +253,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(this, id, likes, sharer, title, artist, styles, link, description, liked, playlist);
+            Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked, playlist);
             playlist.addSong(songItem);
             count++;
         }

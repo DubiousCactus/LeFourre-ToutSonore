@@ -235,6 +235,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
     }
 
     public void play(final int songIndex) {
+        if(songList.isEmpty())
+            return;
         pause();
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
@@ -244,7 +246,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         updateSongInfoDisplay();
 
         if(currentSong.getLink().contains("soundcloud")) {
-            if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().contains("none")) {
+            if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none") && !currentSong.getSharerName().equals("none")) {
                 String key = "c818b360defc350d7e45840b71e117e3";
 
                 ipv.setMax((int) getSongDuration());
@@ -263,6 +265,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
                 // Build the ExoPlayer and start playback
                 exoPlayer.prepare(audioRenderer);
                 exoPlayer.setPlayWhenReady(true);
+                exoPlayer.seekTo(0);
+                sharerInfo.setText("Ajouté par " + currentSong.getSharerName());
             } else {
                 RequestQueue requestQueue = Volley.newRequestQueue(context);
                 CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3", null, new Response.Listener<JSONObject>() {
@@ -290,6 +294,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
                             // Build the ExoPlayer and start playback
                             exoPlayer.prepare(audioRenderer);
                             exoPlayer.setPlayWhenReady(true);
+                            exoPlayer.seekTo(0);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -304,6 +309,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
                     @Override
                     public void onResponse(String response) {
                         sharerInfo.setText("Ajouté par " + response);
+                        songList.get(songIndex).setSharerName(response);
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -328,8 +334,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
     }
 
     public static void resume() {
-        exoPlayer.setPlayWhenReady(true);
-        //play(songIndex);
+        exoPlayer.seekTo(exoPlayer.getCurrentPosition());
     }
 
     public long getSongDuration() {

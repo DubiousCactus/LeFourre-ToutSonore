@@ -16,7 +16,7 @@
         android:gravity="bottom"
         sothree:umanoPanelHeight="68dp"
         sothree:umanoShadowHeight="4dp"
-        sothree:umanoDragView="@+id/listheader"
+        sothree:umanoDragView="@+id/listHeader"
         sothree:umanoParallaxOffset="100dp">
 
         <RelativeLayout

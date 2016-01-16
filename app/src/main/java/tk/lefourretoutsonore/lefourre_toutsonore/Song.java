@@ -12,6 +12,7 @@ public class Song implements Serializable {
     private int id;
     private int likes;
     private long sharer;
+    private String sharerName;
     private String title;
     private String artist;
     private String styles;
@@ -33,9 +34,18 @@ public class Song implements Serializable {
         this.description = description;
         coverUrl = "none";
         streamUrl = "none";
+        sharerName = "none";
     }
 
     public Song() {
+    }
+
+    public void setSharerName(String name) {
+        sharerName = name;
+    }
+
+    public String getSharerName() {
+        return sharerName;
     }
 
     public void setStreamUrl(String URL) {

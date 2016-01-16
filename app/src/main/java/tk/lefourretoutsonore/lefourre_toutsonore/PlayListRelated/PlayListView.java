@@ -1,10 +1,14 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,24 +19,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
-
-import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Iterator;
-
 import co.mobiwise.library.InteractivePlayerView;
 import co.mobiwise.library.OnActionClickedListener;
-import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
+import tk.lefourretoutsonore.lefourre_toutsonore.MyNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
@@ -52,6 +48,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private InteractivePlayerView ipv;
     private boolean playing;
     private SlidingUpPanelLayout slidingLayout;
+    private MyNotification notif;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +61,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         initDrawer();
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+        listView = (ListView) findViewById(R.id.songsList);
         ipv = (InteractivePlayerView) findViewById(R.id.ipv);
         ipv.setMax(123);
         ipv.setOnActionClickedListener(new OnActionClickedListener() {
@@ -79,13 +77,25 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
+        notif = new MyNotification(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        playing = false;
     }
+
+    @Override
+    public void onPause()  {
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        notif.notificationCancel();
+    }
+
 
     public void initListeners() {
         ipv.setCoverDrawable(R.drawable.no_cover);
@@ -100,7 +110,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         (findViewById(R.id.previous_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(playlist.getSongIndex() >= 0) {
+                if (playlist.getSongIndex() >= 0) {
                     playlist.play(playlist.getSongIndex() - 1);
                     playing = true;
                 }
@@ -119,6 +129,16 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     playlist.pause();
                     playing = false;
                 }
+            }
+        });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                playing = true;
+                playlist.pause();
+                playlist.play(position);
+                slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
     }
@@ -259,20 +279,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         }
         playlist.setCount(count);
         playlist.saveOnDisk();
-        listView = (ListView) findViewById(R.id.songsList);
         PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                playing = true;
-                playlist.pause();
-                Log.i("clickList", "item : " + position);
-                playlist.play(position);
-                slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-            }
-        });
         dialog.dismiss();
     }
+
 }

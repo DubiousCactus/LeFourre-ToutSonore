@@ -1,10 +1,16 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +53,7 @@ import java.util.concurrent.TimeoutException;
 
 import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
+import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
@@ -71,7 +78,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
     private TextView descriptionInfo;
     private TextView songTitleInfo;
     private TextView songArtistInfo;
-    private ExoPlayer exoPlayer;
+    private static ExoPlayer exoPlayer;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
@@ -86,6 +93,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         exoPlayer.addListener(this);
     }
 
+
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if(playbackState == ExoPlayer.STATE_ENDED) {
@@ -98,6 +106,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
 
     @Override
     public void onPlayWhenReadyCommitted() {
+        showNotification();
         ipv.start();
         ipv.setMax((int) getSongDuration());
         if(!songList.get(songIndex).getCoverUrl().isEmpty())
@@ -225,67 +234,102 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         requestQueue.add(likeRequest);
     }
 
-    public void play(int songIndex) {
+    public void play(final int songIndex) {
         pause();
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
-        updateSongInfoDisplay();
         final Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
         updateSongInfoDisplay();
 
         if(currentSong.getLink().contains("soundcloud")) {
-            RequestQueue requestQueue = Volley.newRequestQueue(context);
-            CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3" , null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        final String BASE_URL = response.getString("stream_url");
-                        String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
-                        currentSong.setCoverUrl(coverUrl);
-                        String key = "c818b360defc350d7e45840b71e117e3";
-                        Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-                                .appendQueryParameter("client_id", key)
-                                .build();
-                        // Build the sample source
-                        FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
-                        // Build the track renderers
-                        TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-                        // Build the ExoPlayer and start playback
-                        exoPlayer.prepare(audioRenderer);
-                        exoPlayer.setPlayWhenReady(true);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
-                }
-            });
-            StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    sharerInfo.setText("Ajouté par " + response);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
+            if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().contains("none")) {
+                String key = "c818b360defc350d7e45840b71e117e3";
 
-                }
-            });
-            requestQueue.add(request);
-            requestQueue.add(sharerRequest);
+                ipv.setMax((int) getSongDuration());
+                if(!currentSong.getCoverUrl().isEmpty())
+                    ipv.setCoverURL(currentSong.getCoverUrl());
+                else
+                    ipv.setCoverDrawable(R.drawable.no_cover);
+
+                Uri builtUri = Uri.parse(currentSong.getStreamUrl()).buildUpon()
+                        .appendQueryParameter("client_id", key)
+                        .build();
+                // Build the sample source
+                FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
+                // Build the track renderers
+                TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+                // Build the ExoPlayer and start playback
+                exoPlayer.prepare(audioRenderer);
+                exoPlayer.setPlayWhenReady(true);
+            } else {
+                RequestQueue requestQueue = Volley.newRequestQueue(context);
+                CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3", null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            final String BASE_URL = response.getString("stream_url");
+                            String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
+                            songList.get(songIndex).setCoverUrl(coverUrl);
+                            String key = "c818b360defc350d7e45840b71e117e3";
+
+                            ipv.setMax((int) getSongDuration());
+                            if (!songList.get(songIndex).getCoverUrl().isEmpty())
+                                ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
+                            else
+                                ipv.setCoverDrawable(R.drawable.no_cover);
+
+                            Uri builtUri = Uri.parse(BASE_URL).buildUpon()
+                                    .appendQueryParameter("client_id", key)
+                                    .build();
+                            // Build the sample source
+                            FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
+                            // Build the track renderers
+                            TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+                            // Build the ExoPlayer and start playback
+                            exoPlayer.prepare(audioRenderer);
+                            exoPlayer.setPlayWhenReady(true);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        sharerInfo.setText("Ajouté par " + response);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                });
+                requestQueue.add(request);
+                requestQueue.add(sharerRequest);
+            }
         } else {
             exoPlayer.release();
             Toast.makeText(context, "Son YouTube, lecture impossible", Toast.LENGTH_SHORT).show();
+            play(this.songIndex+1);
         }
     }
 
-    public void pause() {
+
+
+    public static void pause() {
         exoPlayer.stop();
+    }
+
+    public static void resume() {
+        exoPlayer.setPlayWhenReady(true);
+        //play(songIndex);
     }
 
     public long getSongDuration() {
@@ -303,5 +347,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         descriptionInfo.setText(currentSong.getDescription());
         songArtistInfo.setText(currentSong.getArtist());
         songTitleInfo.setText(currentSong.getTitle());
+    }
+
+    private void showNotification() {
     }
 }

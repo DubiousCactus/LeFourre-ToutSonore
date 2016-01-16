@@ -48,6 +48,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".HelperActivity"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"/>
+
         <activity android:name=".Share" />
 
         <receiver android:name=".BootCompletedIntentReceiver">

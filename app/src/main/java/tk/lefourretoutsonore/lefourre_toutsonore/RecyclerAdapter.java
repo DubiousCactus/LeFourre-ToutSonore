@@ -30,7 +30,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         TextView title;
         TextView styles;
         TextView counter;
-        View separator;
+        View strip;
         Context context;
 
         EventViewHolder(View itemView, Context context) {
@@ -41,7 +41,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
             title = (TextView) itemView.findViewById(R.id.card_title);
             counter = (TextView) itemView.findViewById(R.id.card_ajouts);
             styles = (TextView) itemView.findViewById(R.id.card_styles);
-            separator = itemView.findViewById(R.id.separator);
+            strip = itemView.findViewById(R.id.strip);
             ban = (ImageView) itemView.findViewById(R.id.image);
         }
     }
@@ -84,28 +84,28 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         holder.styles.setText(choiceSource[position].getDesc());
         switch(choiceSource[position]) {
             case REGGAE:
-                holder.separator.setBackgroundColor(Color.GREEN);
+                holder.strip.setBackgroundColor(Color.GREEN);
                 break;
             case ELECTRO:
-                holder.separator.setBackgroundColor(Color.WHITE);
+                holder.strip.setBackgroundColor(Color.WHITE);
                 break;
             case TRANCE:
-                holder.separator.setBackgroundColor(Color.GREEN);
+                holder.strip.setBackgroundColor(Color.GREEN);
                 break;
             case POP:
-                holder.separator.setBackgroundColor(Color.YELLOW);
+                holder.strip.setBackgroundColor(Color.YELLOW);
                 break;
             case CORE:
-                holder.separator.setBackgroundColor(Color.RED);
+                holder.strip.setBackgroundColor(Color.RED);
                 break;
             case HIPHOP:
-                holder.separator.setBackgroundColor(Color.rgb(255, 128, 0));
+                holder.strip.setBackgroundColor(Color.rgb(255, 128, 0));
                 break;
             case ROCK:
-                holder.separator.setBackgroundColor(Color.MAGENTA);
+                holder.strip.setBackgroundColor(Color.MAGENTA);
                 break;
         }
-        holder.separator.setAlpha(0.65f);
+        holder.strip.setAlpha(0.65f);
         fetchCount(holder, position);
     }
 

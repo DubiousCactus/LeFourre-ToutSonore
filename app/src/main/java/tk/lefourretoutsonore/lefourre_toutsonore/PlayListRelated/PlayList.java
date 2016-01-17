@@ -1,13 +1,16 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
+import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -22,11 +25,27 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.FrameworkSampleSource;
+import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.TrackRenderer;
+import com.google.android.exoplayer.audio.AudioCapabilities;
+import com.google.android.exoplayer.chunk.ChunkSampleSource;
+import com.google.android.exoplayer.chunk.ChunkSource;
+import com.google.android.exoplayer.dash.DashChunkSource;
+import com.google.android.exoplayer.dash.DefaultDashTrackSelector;
+import com.google.android.exoplayer.dash.mpd.MediaPresentationDescription;
+import com.google.android.exoplayer.dash.mpd.MediaPresentationDescriptionParser;
+import com.google.android.exoplayer.dash.mpd.UtcTimingElement;
+import com.google.android.exoplayer.dash.mpd.UtcTimingElementResolver;
+import com.google.android.exoplayer.upstream.DataSource;
+import com.google.android.exoplayer.upstream.DefaultAllocator;
+import com.google.android.exoplayer.upstream.DefaultUriDataSource;
+import com.google.android.exoplayer.util.ManifestFetcher;
+import com.google.android.exoplayer.util.Util;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +62,9 @@ import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,11 +79,16 @@ import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
+import android.support.v4.app.FragmentManager;
+
+import tk.lefourretoutsonore.lefourre_toutsonore.YoutubeVideo;
+import tk.lefourretoutsonore.lefourre_toutsonore.callback.VideoControlCallback;
+import tk.lefourretoutsonore.lefourre_toutsonore.player.DemoPlayer;
 
 /**
  * Created by transpalette on 1/3/16.
  */
-public class PlayList implements ExoPlayer.Listener, Serializable {
+public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetcher.ManifestCallback<MediaPresentationDescription>, UtcTimingElementResolver.UtcTimingCallback {
 
     private int songIndex;
     private ArrayList<Song> songList;
@@ -70,7 +97,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
     private Context context;
     private PlayListChoice choice;
     private User currentUser;
-    private InteractivePlayerView ipv;
+    private static InteractivePlayerView ipv;
     private TextView songInfo;
     private TextView sharerInfo;
     private TextView likesInfo;
@@ -79,6 +106,15 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
     private TextView songTitleInfo;
     private TextView songArtistInfo;
     private static ExoPlayer exoPlayer;
+
+    //YouTube
+    private MediaPresentationDescription manifest;
+    private DefaultUriDataSource manifestDataSource;
+    private ManifestFetcher<MediaPresentationDescription> manifestFetcher;
+    private long elapsedRealtimeOffset;
+    private String userAgent;
+    private String videoUrl;
+    private Uri contentUri;
 
     public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
         this.name = choice.toString();
@@ -96,28 +132,29 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if(playbackState == ExoPlayer.STATE_ENDED) {
+        if(playbackState == ExoPlayer.STATE_READY) {
+            ipv.start();
+            ipv.setMax((int) getSongDuration());
+            if(!songList.get(songIndex).getCoverUrl().isEmpty())
+                ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
+            else
+                ipv.setCoverDrawable(R.drawable.no_cover);
+        }
+        else if(playbackState == ExoPlayer.STATE_ENDED) {
             songIndex++;
             updateSongInfoDisplay();
             play(songIndex);
-        } else if(playbackState == ExoPlayer.STATE_IDLE)
+        } else if(playbackState == ExoPlayer.STATE_IDLE) {
             ipv.stop();
+        }
     }
 
     @Override
     public void onPlayWhenReadyCommitted() {
-        showNotification();
-        ipv.start();
-        ipv.setMax((int) getSongDuration());
-        if(!songList.get(songIndex).getCoverUrl().isEmpty())
-            ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
-        else
-            ipv.setCoverDrawable(R.drawable.no_cover);
     }
 
     @Override
     public void onPlayerError(ExoPlaybackException error) {
-
     }
 
     public void addSong(Song song) {
@@ -241,100 +278,179 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
-        final Song currentSong = songList.get(songIndex);
+        Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
         updateSongInfoDisplay();
 
         if(currentSong.getLink().contains("soundcloud")) {
-            if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none") && !currentSong.getSharerName().equals("none")) {
-                String key = "c818b360defc350d7e45840b71e117e3";
-
-                ipv.setMax((int) getSongDuration());
-                if(!currentSong.getCoverUrl().isEmpty())
-                    ipv.setCoverURL(currentSong.getCoverUrl());
-                else
-                    ipv.setCoverDrawable(R.drawable.no_cover);
-
-                Uri builtUri = Uri.parse(currentSong.getStreamUrl()).buildUpon()
-                        .appendQueryParameter("client_id", key)
-                        .build();
-                // Build the sample source
-                FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
-                // Build the track renderers
-                TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-                // Build the ExoPlayer and start playback
-                exoPlayer.prepare(audioRenderer);
-                exoPlayer.setPlayWhenReady(true);
-                exoPlayer.seekTo(0);
-                sharerInfo.setText("Ajouté par " + currentSong.getSharerName());
-            } else {
-                RequestQueue requestQueue = Volley.newRequestQueue(context);
-                CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3", null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            final String BASE_URL = response.getString("stream_url");
-                            String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
-                            songList.get(songIndex).setCoverUrl(coverUrl);
-                            String key = "c818b360defc350d7e45840b71e117e3";
-
-                            ipv.setMax((int) getSongDuration());
-                            if (!songList.get(songIndex).getCoverUrl().isEmpty())
-                                ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
-                            else
-                                ipv.setCoverDrawable(R.drawable.no_cover);
-
-                            Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-                                    .appendQueryParameter("client_id", key)
-                                    .build();
-                            // Build the sample source
-                            FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
-                            // Build the track renderers
-                            TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-                            // Build the ExoPlayer and start playback
-                            exoPlayer.prepare(audioRenderer);
-                            exoPlayer.setPlayWhenReady(true);
-                            exoPlayer.seekTo(0);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        sharerInfo.setText("Ajouté par " + response);
-                        songList.get(songIndex).setSharerName(response);
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                    }
-                });
-                requestQueue.add(request);
-                requestQueue.add(sharerRequest);
-            }
+            releasePlayer();
+            playSoundCloud(currentSong);
         } else {
-            exoPlayer.release();
-            Toast.makeText(context, "Son YouTube, lecture impossible", Toast.LENGTH_SHORT).show();
-            play(this.songIndex+1);
+            releasePlayer();
+            playYoutube(currentSong);
         }
     }
 
+    private void playSoundCloud(final Song currentSong) {
+        if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none") && !currentSong.getSharerName().equals("none")) {
+            String key = "c818b360defc350d7e45840b71e117e3";
 
+            ipv.setMax((int) getSongDuration());
+            if(!currentSong.getCoverUrl().isEmpty())
+                ipv.setCoverURL(currentSong.getCoverUrl());
+            else
+                ipv.setCoverDrawable(R.drawable.no_cover);
+
+            Uri builtUri = Uri.parse(currentSong.getStreamUrl()).buildUpon()
+                    .appendQueryParameter("client_id", key)
+                    .build();
+            // Build the sample source
+            FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
+            // Build the track renderers
+            TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+            // Build the ExoPlayer and start playback
+            exoPlayer.prepare(audioRenderer);
+            exoPlayer.setPlayWhenReady(true);
+            exoPlayer.seekTo(0);
+            sharerInfo.setText("Ajouté par " + currentSong.getSharerName());
+        } else {
+            RequestQueue requestQueue = Volley.newRequestQueue(context);
+            CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3", null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        final String BASE_URL = response.getString("stream_url");
+                        String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
+                        songList.get(songIndex).setCoverUrl(coverUrl);
+                        String key = "c818b360defc350d7e45840b71e117e3";
+
+                        ipv.setMax((int) getSongDuration());
+                        if (!songList.get(songIndex).getCoverUrl().isEmpty())
+                            ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
+                        else
+                            ipv.setCoverDrawable(R.drawable.no_cover);
+
+                        Uri builtUri = Uri.parse(BASE_URL).buildUpon()
+                                .appendQueryParameter("client_id", key)
+                                .build();
+                        // Build the sample source
+                        FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
+                        // Build the track renderers
+                        TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+                        // Build the ExoPlayer and start playback
+                        exoPlayer.prepare(audioRenderer);
+                        exoPlayer.setPlayWhenReady(true);
+                        exoPlayer.seekTo(0);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
+                }
+            });
+            StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    sharerInfo.setText("Ajouté par " + response);
+                    songList.get(songIndex).setSharerName(response);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                }
+            });
+            requestQueue.add(request);
+            requestQueue.add(sharerRequest);
+        }
+    }
+
+    private void playYoutube(final Song currentSong) {
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        StringRequest request = new StringRequest(Request.Method.GET, "http://www.youtube.com/get_video_info?&video_id=" + currentSong.getLink().substring(currentSong.getLink().indexOf("=") + 1), new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    String result = URLDecoder.decode(response, "UTF-8");
+                    if(!result.startsWith("error")) {
+                        String firstPart = URLDecoder.decode(result.substring(result.indexOf("dashmpd=") + 8), "UTF-8");
+                        videoUrl = URLDecoder.decode(firstPart.substring(0, firstPart.indexOf("&")), "UTF-8");
+                        contentUri = Uri.parse(videoUrl);
+                        MediaPresentationDescriptionParser parser = new MediaPresentationDescriptionParser();
+                        userAgent = Util.getUserAgent(context, "LeFourre-ToutSonore");
+                        manifestDataSource = new DefaultUriDataSource(context, userAgent);
+                        manifestFetcher = new ManifestFetcher<>(contentUri.toString(), manifestDataSource, parser);
+                        preparePlayer();
+                    } else {
+                        Toast.makeText(context, "Contenu protégé - Lecture impossible", Toast.LENGTH_SHORT).show();
+                        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(currentSong.getLink())));
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(request);
+    }
+
+    private void buildRenderer() {
+        if (manifest.dynamic && manifest.utcTiming != null) {
+            UtcTimingElementResolver.resolveTimingElement(manifestDataSource, manifest.utcTiming,
+                    manifestFetcher.getManifestLoadCompleteTimestamp(), this);
+        }
+        Handler mainHandler = new Handler();
+        LoadControl loadControl = new DefaultLoadControl(new DefaultAllocator(64 * 1024));
+
+        // Build the audio renderer.
+        DataSource audioDataSource = new DefaultUriDataSource(context, userAgent);
+        ChunkSource audioChunkSource = new DashChunkSource(manifestFetcher, DefaultDashTrackSelector.newAudioInstance(), audioDataSource, null, 30000, elapsedRealtimeOffset, mainHandler, null);
+        ChunkSampleSource audioSampleSource = new ChunkSampleSource(audioChunkSource, loadControl,
+                54 * (64 * 1024), mainHandler, null,
+                DemoPlayer.TYPE_AUDIO);
+        TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(audioSampleSource,
+                null, true, mainHandler, null, AudioCapabilities.getCapabilities(context));
+
+        exoPlayer.prepare(audioRenderer);
+    }
+
+    private void releasePlayer() {
+        if (exoPlayer != null) {
+            exoPlayer.release();
+            exoPlayer = null;
+        }
+    }
+
+    private void preparePlayer() {
+        if (exoPlayer == null) {
+            exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
+            manifestFetcher.singleLoad(exoPlayer.getPlaybackLooper(), this);
+            exoPlayer.addListener(this);
+            exoPlayer.seekTo(0);
+            exoPlayer.setPlayWhenReady(true);
+        }
+    }
+
+    public void destroy() {
+        exoPlayer.release();
+    }
 
     public static void pause() {
-        exoPlayer.stop();
+        exoPlayer.setPlayWhenReady(false);
+        ipv.stop();
+        Log.i("isPlaying", String.valueOf(ipv.isPlaying()));
     }
 
     public static void resume() {
-        exoPlayer.seekTo(exoPlayer.getCurrentPosition());
+        exoPlayer.setPlayWhenReady(true);
+        ipv.start();
+        ipv.setProgress((int) exoPlayer.getCurrentPosition() / 1000);
     }
 
     public long getSongDuration() {
@@ -354,6 +470,31 @@ public class PlayList implements ExoPlayer.Listener, Serializable {
         songTitleInfo.setText(currentSong.getTitle());
     }
 
-    private void showNotification() {
+    @Override
+    public void onSingleManifest(MediaPresentationDescription manifest) {
+        this.manifest = manifest;
+        if (manifest.dynamic && manifest.utcTiming != null) {
+            UtcTimingElementResolver.resolveTimingElement(manifestDataSource, manifest.utcTiming,
+                    manifestFetcher.getManifestLoadCompleteTimestamp(), this);
+        } else {
+            buildRenderer();
+        }
+    }
+
+    @Override
+    public void onSingleManifestError(IOException e) {
+    }
+
+    @Override
+    public void onTimestampResolved(UtcTimingElement utcTiming, long elapsedRealtimeOffset) {
+        this.elapsedRealtimeOffset = elapsedRealtimeOffset;
+        buildRenderer();
+    }
+
+    @Override
+    public void onTimestampError(UtcTimingElement utcTiming, IOException e) {
+        Log.e("", "Failed to resolve UtcTiming element [" + utcTiming + "]", e);
+        // Be optimistic and continue in the hope that the device clock is correct.
+        buildRenderer();
     }
 }

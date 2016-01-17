@@ -94,6 +94,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     public void onDestroy() {
         super.onDestroy();
         notif.notificationCancel();
+        playlist.destroy();
     }
 
 
@@ -124,9 +125,11 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     playlist.play(playlist.getSongIndex());
                     playing = true;
+                    slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                 } else {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
                     playlist.pause();
+                    ipv.stop();
                     playing = false;
                 }
             }

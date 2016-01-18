@@ -2,6 +2,7 @@ package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
 import android.content.Context;
 import android.content.Intent;
+import android.drm.DrmStore;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
@@ -76,7 +77,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private TextView songTitleInfo;
     private TextView songArtistInfo;
     private static ExoPlayer exoPlayer;
-
+    private RequestQueue requestQueue;
     //YouTube
     private MediaPresentationDescription manifest;
     private DefaultUriDataSource manifestDataSource;
@@ -97,6 +98,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         songIndex = 0;
         exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
         exoPlayer.addListener(this);
+        requestQueue = Volley.newRequestQueue(context);
     }
 
 
@@ -247,7 +249,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             return;
 
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
-        ipv.setCoverDrawable(R.drawable.no_cover);
+        ipv.setCoverDrawable(R.drawable.loading);
         ipv.setProgress(0);
         Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
@@ -258,12 +260,28 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         } else {
             playYoutube(currentSong);
         }
+
+        StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                sharerInfo.setText("Ajouté par " + response);
+                songList.get(songIndex).setSharerName(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        if(currentSong.getSharerName().equals("none"))
+            requestQueue.add(sharerRequest);
+        else
+            sharerInfo.setText("Ajouté par " + currentSong.getSharerName());
     }
 
     private void playSoundCloud(final Song currentSong) {
         final String soundCloudKey = "c818b360defc350d7e45840b71e117e3";
 
-        if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none") && !currentSong.getSharerName().equals("none")) {
+        if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none")) {
             Uri builtUri = Uri.parse(currentSong.getStreamUrl()).buildUpon()
                     .appendQueryParameter("client_id", soundCloudKey)
                     .build();
@@ -275,9 +293,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             exoPlayer.prepare(audioRenderer);
             exoPlayer.setPlayWhenReady(true);
             exoPlayer.seekTo(0);
-            sharerInfo.setText("Ajouté par " + currentSong.getSharerName());
         } else {
-            RequestQueue requestQueue = Volley.newRequestQueue(context);
             CustomRequest request = new CustomRequest(Request.Method.GET, "https://api.soundcloud.com/resolve.json?url=" + currentSong.getLink() + "&client_id=c818b360defc350d7e45840b71e117e3", null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
@@ -307,19 +323,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                     Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
                 }
             });
-            StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(currentSong.getSharer()), new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    sharerInfo.setText("Ajouté par " + response);
-                    songList.get(songIndex).setSharerName(response);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                }
-            });
             requestQueue.add(request);
-            requestQueue.add(sharerRequest);
         }
     }
 
@@ -393,8 +397,14 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public static void resume() {
         exoPlayer.setPlayWhenReady(true);
-        ipv.start();
-        ipv.setProgress((int) exoPlayer.getCurrentPosition() / 1000);
+    }
+
+    public boolean isPlaying() {
+        boolean isPlaying = false;
+        if(exoPlayer.getCurrentPosition() > 0)
+            isPlaying = true;
+
+        return isPlaying;
     }
 
     public long getSongDuration() {

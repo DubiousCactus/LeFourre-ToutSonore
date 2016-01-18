@@ -103,9 +103,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ipv.stop();
-                playlist.play(playlist.getSongIndex() + 1);
                 playing = true;
+                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                playlist.play(playlist.getSongIndex() + 1);
             }
         });
 
@@ -113,9 +113,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public void onClick(View v) {
                 if (playlist.getSongIndex() >= 0) {
-                    ipv.stop();
-                    playlist.play(playlist.getSongIndex() - 1);
                     playing = true;
+                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                    playlist.play(playlist.getSongIndex() - 1);
                 }
             }
         });
@@ -126,7 +126,10 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 if (!playing) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     ipv.stop();
-                    playlist.play(playlist.getSongIndex());
+                    if(playlist.isPlaying())
+                        playlist.resume();
+                    else
+                        playlist.play(playlist.getSongIndex());
                     playing = true;
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                 } else {
@@ -143,7 +146,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playing = true;
                 ipv.stop();
-                //playlist.pause();
+                playlist.pause();
                 playlist.play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }

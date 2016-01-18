@@ -103,6 +103,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ipv.stop();
                 playlist.play(playlist.getSongIndex() + 1);
                 playing = true;
             }
@@ -112,6 +113,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public void onClick(View v) {
                 if (playlist.getSongIndex() >= 0) {
+                    ipv.stop();
                     playlist.play(playlist.getSongIndex() - 1);
                     playing = true;
                 }
@@ -123,13 +125,14 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onClick(View v) {
                 if (!playing) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+                    ipv.stop();
                     playlist.play(playlist.getSongIndex());
                     playing = true;
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                 } else {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
-                    playlist.pause();
                     ipv.stop();
+                    playlist.pause();
                     playing = false;
                 }
             }
@@ -139,7 +142,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playing = true;
-                playlist.pause();
+                ipv.stop();
+                //playlist.pause();
                 playlist.play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }

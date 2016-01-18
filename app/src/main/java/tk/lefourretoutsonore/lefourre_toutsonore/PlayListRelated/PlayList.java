@@ -1,28 +1,17 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
-import android.app.FragmentTransaction;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.exoplayer.DefaultLoadControl;
@@ -46,44 +35,25 @@ import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.google.android.exoplayer.util.Util;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OptionalDataException;
 import java.io.Serializable;
-import java.io.StreamCorruptedException;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
-import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
-import android.support.v4.app.FragmentManager;
-
-import tk.lefourretoutsonore.lefourre_toutsonore.YoutubeVideo;
-import tk.lefourretoutsonore.lefourre_toutsonore.callback.VideoControlCallback;
-import tk.lefourretoutsonore.lefourre_toutsonore.player.DemoPlayer;
 
 /**
  * Created by transpalette on 1/3/16.
@@ -125,26 +95,29 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         count = 0;
         this.ipv = ipv;
         songIndex = 0;
-        exoPlayer = ExoPlayer.Factory.newInstance(1);
+        exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
         exoPlayer.addListener(this);
     }
 
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if(playbackState == ExoPlayer.STATE_READY) {
-            ipv.start();
+        if(playbackState == ExoPlayer.STATE_READY && playWhenReady == true) {
             ipv.setMax((int) getSongDuration());
+            ipv.start();
             if(!songList.get(songIndex).getCoverUrl().isEmpty())
                 ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
             else
                 ipv.setCoverDrawable(R.drawable.no_cover);
         }
         else if(playbackState == ExoPlayer.STATE_ENDED) {
+            ipv.stop();
             songIndex++;
             updateSongInfoDisplay();
             play(songIndex);
         } else if(playbackState == ExoPlayer.STATE_IDLE) {
+            ipv.stop();
+        } else if(playbackState == ExoPlayer.STATE_BUFFERING) {
             ipv.stop();
         }
     }
@@ -209,9 +182,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     public void saveOnDisk() {
-        FileOutputStream fos = null;
         try {
-            fos = context.openFileOutput("playList" + name, Context.MODE_PRIVATE);
+            FileOutputStream fos = context.openFileOutput("playList" + name, Context.MODE_PRIVATE);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeInt(count);
             oos.writeObject(songList);
@@ -220,10 +192,9 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     public boolean retrieveFromDisk() {
-        FileInputStream fis = null;
         boolean success = true;
         try {
-            fis = context.openFileInput("playList" + name);
+            FileInputStream fis = context.openFileInput("playList" + name);
             ObjectInputStream ois = new ObjectInputStream(fis);
             songList.clear();
             count = ois.readInt();
@@ -274,7 +245,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     public void play(final int songIndex) {
         if(songList.isEmpty())
             return;
-        pause();
+
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
@@ -283,26 +254,18 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         updateSongInfoDisplay();
 
         if(currentSong.getLink().contains("soundcloud")) {
-            releasePlayer();
             playSoundCloud(currentSong);
         } else {
-            releasePlayer();
             playYoutube(currentSong);
         }
     }
 
     private void playSoundCloud(final Song currentSong) {
+        final String soundCloudKey = "c818b360defc350d7e45840b71e117e3";
+
         if(!currentSong.getStreamUrl().equals("none") && !currentSong.getCoverUrl().equals("none") && !currentSong.getSharerName().equals("none")) {
-            String key = "c818b360defc350d7e45840b71e117e3";
-
-            ipv.setMax((int) getSongDuration());
-            if(!currentSong.getCoverUrl().isEmpty())
-                ipv.setCoverURL(currentSong.getCoverUrl());
-            else
-                ipv.setCoverDrawable(R.drawable.no_cover);
-
             Uri builtUri = Uri.parse(currentSong.getStreamUrl()).buildUpon()
-                    .appendQueryParameter("client_id", key)
+                    .appendQueryParameter("client_id", soundCloudKey)
                     .build();
             // Build the sample source
             FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
@@ -319,19 +282,12 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                 @Override
                 public void onResponse(JSONObject response) {
                     try {
-                        final String BASE_URL = response.getString("stream_url");
+                        final String streamUrl = response.getString("stream_url");
                         String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
                         songList.get(songIndex).setCoverUrl(coverUrl);
-                        String key = "c818b360defc350d7e45840b71e117e3";
 
-                        ipv.setMax((int) getSongDuration());
-                        if (!songList.get(songIndex).getCoverUrl().isEmpty())
-                            ipv.setCoverURL(songList.get(songIndex).getCoverUrl());
-                        else
-                            ipv.setCoverDrawable(R.drawable.no_cover);
-
-                        Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-                                .appendQueryParameter("client_id", key)
+                        Uri builtUri = Uri.parse(streamUrl).buildUpon()
+                                .appendQueryParameter("client_id", soundCloudKey)
                                 .build();
                         // Build the sample source
                         FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, builtUri, null);
@@ -413,28 +369,17 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         ChunkSource audioChunkSource = new DashChunkSource(manifestFetcher, DefaultDashTrackSelector.newAudioInstance(), audioDataSource, null, 30000, elapsedRealtimeOffset, mainHandler, null);
         ChunkSampleSource audioSampleSource = new ChunkSampleSource(audioChunkSource, loadControl,
                 54 * (64 * 1024), mainHandler, null,
-                DemoPlayer.TYPE_AUDIO);
+                1);
         TrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(audioSampleSource,
                 null, true, mainHandler, null, AudioCapabilities.getCapabilities(context));
 
         exoPlayer.prepare(audioRenderer);
     }
 
-    private void releasePlayer() {
-        if (exoPlayer != null) {
-            exoPlayer.release();
-            exoPlayer = null;
-        }
-    }
-
     private void preparePlayer() {
-        if (exoPlayer == null) {
-            exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
-            manifestFetcher.singleLoad(exoPlayer.getPlaybackLooper(), this);
-            exoPlayer.addListener(this);
-            exoPlayer.seekTo(0);
-            exoPlayer.setPlayWhenReady(true);
-        }
+        manifestFetcher.singleLoad(exoPlayer.getPlaybackLooper(), this);
+        exoPlayer.seekTo(0);
+        exoPlayer.setPlayWhenReady(true);
     }
 
     public void destroy() {
@@ -444,7 +389,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     public static void pause() {
         exoPlayer.setPlayWhenReady(false);
         ipv.stop();
-        Log.i("isPlaying", String.valueOf(ipv.isPlaying()));
     }
 
     public static void resume() {

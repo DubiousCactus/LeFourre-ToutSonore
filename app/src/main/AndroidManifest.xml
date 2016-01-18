@@ -58,11 +58,6 @@
         </receiver>
 
         <service android:name=".service.PollService" />
-
-        <activity
-            android:name=".YoutubeVideo"
-            android:label="@string/title_activity_youtube_video"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

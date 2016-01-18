@@ -170,10 +170,10 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 } else if (id == R.id.nav_home) {
                     Intent myIntent = new Intent(PlayListView.this, Main.class);
                     myIntent.putExtra("user", currentUser);
-                    if(!playlist.getSongList().isEmpty()) {
+                    /*if(!playlist.getSongList().isEmpty()) {
                         myIntent.putExtra("choice", choice);
                         myIntent.putExtra("songIndex", playlist.getSongIndex());
-                    }
+                    }*/
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     setTitle(choice.LIKES.getLongName());

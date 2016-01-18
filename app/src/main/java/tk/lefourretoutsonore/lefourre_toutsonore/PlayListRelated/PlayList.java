@@ -251,6 +251,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         ipv.setAction2Selected(songList.get(songIndex).getLiked());
         ipv.setCoverDrawable(R.drawable.loading);
         ipv.setProgress(0);
+        ipv.stop();
         Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
         updateSongInfoDisplay();

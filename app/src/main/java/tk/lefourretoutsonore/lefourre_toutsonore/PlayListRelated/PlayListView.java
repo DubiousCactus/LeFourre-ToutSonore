@@ -59,6 +59,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
+        notif = new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
         listView = (ListView) findViewById(R.id.songsList);
@@ -77,7 +78,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
-        notif = new MyNotification(this);
     }
 
     @Override

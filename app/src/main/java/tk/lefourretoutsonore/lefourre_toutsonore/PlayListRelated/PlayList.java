@@ -403,6 +403,14 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         exoPlayer.setPlayWhenReady(true);
     }
 
+    public static void previous() {
+
+    }
+
+    public static void next() {
+
+    }
+
     public boolean isPlaying() {
         boolean isPlaying = false;
         if(exoPlayer.getCurrentPosition() > 0)

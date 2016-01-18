@@ -17,18 +17,14 @@ public class HelperActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);
-        Log.i("debug", "helperactivity called");
         String action = (String) getIntent().getExtras().get("DO");
+        Log.i("debug", "helperactivity called : " + action);
         assert action != null;
-        if (action.equals("play")) {
+        if(action.equals("play"))
             PlayList.resume();
-            Log.i("NotificationReturnSlot", "play");
-            //Your code
-        } else if (action.equals("stop")) {
-            //Your code
+        else if(action.equals("pause"))
             PlayList.pause();
-            Log.i("NotificationReturnSlot", "stopNotification");
-        }
+
         finish();
     }
 

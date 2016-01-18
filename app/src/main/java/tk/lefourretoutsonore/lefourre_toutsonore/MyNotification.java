@@ -1,15 +1,11 @@
 package tk.lefourretoutsonore.lefourre_toutsonore;
 
-import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
-
-import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 
 /**
  * Created by M4gicT0 on 15/01/2016.
@@ -26,7 +22,7 @@ public class MyNotification {
         this.parent = parent;
         nBuilder = new NotificationCompat.Builder(parent)
                 .setContentTitle("Le Fourre-Tout Sonore")
-                .setSmallIcon(R.drawable.logo)
+                .setSmallIcon(R.drawable.logo_icon)
                 .setOngoing(true);
 
         remoteView = new RemoteViews(parent.getPackageName(), R.layout.player_notification);
@@ -40,16 +36,28 @@ public class MyNotification {
     }
 
 
-    public void setListeners(RemoteViews view){
+    private void setListeners(RemoteViews view){
+        Intent previous = new Intent(parent, HelperActivity.class);
+        previous.putExtra("DO", "previous");
+        PendingIntent btn1 = PendingIntent.getActivity(parent, 0, previous, 0);
+        view.setOnClickPendingIntent(R.id.notifPrevious, btn1);
+
+
+        Intent pause = new Intent(parent, HelperActivity.class);
+        pause.putExtra("DO", "pause");
+        PendingIntent btn2 = PendingIntent.getActivity(parent, 1, pause, 0);
+        view.setOnClickPendingIntent(R.id.notifPause, btn2);
+
         Intent play = new Intent(parent, HelperActivity.class);
         play.putExtra("DO", "play");
-        PendingIntent btn1 = PendingIntent.getActivity(parent, 0, play, 0);
-        view.setOnClickPendingIntent(R.id.notifPlay, btn1);
+        PendingIntent btn3 = PendingIntent.getActivity(parent, 2, play, 0);
+        view.setOnClickPendingIntent(R.id.notifPlay, btn3);
         //listener 2
-        Intent stop = new Intent(parent, HelperActivity.class);
-        stop.putExtra("DO", "stop");
-        PendingIntent btn2 = PendingIntent.getActivity(parent, 1, stop, 0);
-        view.setOnClickPendingIntent(R.id.notifPause, btn2);
+
+        Intent next = new Intent(parent, HelperActivity.class);
+        next.putExtra("DO", "next");
+        PendingIntent btn4 = PendingIntent.getActivity(parent, 3, next, 0);
+        view.setOnClickPendingIntent(R.id.notifNext, btn4);
     }
 
     public void notificationCancel() {

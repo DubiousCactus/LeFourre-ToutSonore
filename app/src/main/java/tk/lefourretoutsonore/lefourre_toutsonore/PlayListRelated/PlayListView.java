@@ -20,6 +20,8 @@ import android.widget.*;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,6 +61,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         setTitle(choice.getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
+        /*AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);*/
         notif = new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
@@ -93,13 +98,15 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         colorFade.start();
     }
 
-    public void stopBlinking() {
+    public void stopBlinking(boolean error) {
         if(colorFade != null) {
             colorFade.cancel();
             colorFade.setTarget(null);
             colorFade = null;
             findViewById(R.id.imageBottom).setBackgroundColor(Color.parseColor("#262626"));
         }
+        if(error)
+            findViewById(R.id.play_button_layout).callOnClick();
     }
 
     @Override
@@ -114,15 +121,15 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         notif.notificationCancel();
         playlist.destroy();
+        super.onDestroy();
     }
 
 
     public void initListeners() {
         ipv.setCoverDrawable(R.drawable.no_cover);
-        (findViewById(R.id.next_song)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.next_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 playing = true;
@@ -131,7 +138,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             }
         });
 
-        (findViewById(R.id.previous_song)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.previous_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (playlist.getSongIndex() >= 0) {
@@ -142,7 +149,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             }
         });
 
-        (findViewById(R.id.play_button_layout)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.play_button_layout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!playing) {

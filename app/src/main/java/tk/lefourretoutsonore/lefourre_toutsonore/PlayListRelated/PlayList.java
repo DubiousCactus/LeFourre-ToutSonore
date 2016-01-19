@@ -117,7 +117,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if(playbackState == ExoPlayer.STATE_READY && playWhenReady == true) {
-            ((PlayListView) context).stopBlinking();
+            ((PlayListView) context).stopBlinking(false);
             ipv.setMax((int) getSongDuration());
             ipv.start();
             if(!songList.get(songIndex).getCoverUrl().isEmpty())
@@ -265,7 +265,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
-        ((PlayListView) context).stopBlinking();
         if(choice == PlayListChoice.LIKES)
             ipv.setAction2Selected(true);
         else
@@ -345,6 +344,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
+                    ((PlayListView) context).stopBlinking(true);
                 }
             });
             requestQueue.add(request);
@@ -379,6 +379,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
+                ((PlayListView) context).stopBlinking(true);
             }
         });
         requestQueue.add(request);

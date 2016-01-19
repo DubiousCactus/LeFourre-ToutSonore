@@ -49,9 +49,9 @@ public class PollService extends IntentService {
         if (!isNetworkAvailable)
             return;
 
-        int resultId = Integer.getInteger(fetchLastSound());
-        int lastSongSaved = Integer.getInteger(getLastSaved());
-        if (resultId > lastSongSaved) {
+        String lastSongSaved = getLastSaved();
+        String resultId = fetchLastSound();
+        if (!resultId.equals("") && !resultId.equals(lastSongSaved)) {
             Log.i(TAG, "Got a new result: " + resultId);
             Intent myIntent = new Intent(this, Launcher.class);
             myIntent.putExtra("playlist", "all");
@@ -67,8 +67,9 @@ public class PollService extends IntentService {
                     .build();
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             notificationManager.notify(0, notification);
+            FileOutputStream fos;
             try {
-                FileOutputStream fos = openFileOutput("lastSong", Context.MODE_PRIVATE);
+                fos = openFileOutput("lastSong", Context.MODE_PRIVATE);
                 ObjectOutputStream oos = new ObjectOutputStream(fos);
                 oos.writeInt(Integer.valueOf(resultId));
                 oos.close();
@@ -100,7 +101,7 @@ public class PollService extends IntentService {
     }
 
     public String fetchLastSound() {
-        String lastSong = "";
+        String lastSong = "0";
         RequestFuture<String> future = RequestFuture.newFuture();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         String url = "http://lefourretoutsonore.tk/service/getLastSong.php";
@@ -108,7 +109,7 @@ public class PollService extends IntentService {
         requestQueue.add(jsObjRequest);
         try {
             lastSong = future.get(); // this will block (forever)
-            if(lastSong.equals(""))
+            if(lastSong.equals("") || lastSong == null)
                 lastSong = "0";
             Log.i(TAG, "lastSongID = " + lastSong);
 
@@ -123,7 +124,7 @@ public class PollService extends IntentService {
 
     public String getLastSaved() {
         FileInputStream fis = null;
-        String lastSongSaved = "null";
+        String lastSongSaved = "0";
         try {
             fis = openFileInput("lastSong");
             ObjectInputStream ois = new ObjectInputStream(fis);

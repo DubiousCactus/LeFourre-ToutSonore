@@ -17,12 +17,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.exoplayer.ExoPlayer;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
 import java.io.Serializable;
-
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
@@ -51,6 +50,9 @@ public class Main extends AppCompatActivity {
             currentUser = (User) getIntent().getSerializableExtra("user");
         initCards();
         initDrawer();
+        /*AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);*/
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         if((getIntent().getSerializableExtra("choice")) != null) {
@@ -65,7 +67,6 @@ public class Main extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     playlist.pause();
-                    Log.i("clickList", "item : " + position);
                     playlist.play(position);
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                 }

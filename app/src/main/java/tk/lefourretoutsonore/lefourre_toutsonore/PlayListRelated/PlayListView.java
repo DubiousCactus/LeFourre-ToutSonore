@@ -1,14 +1,12 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -21,6 +19,7 @@ import android.view.View;
 import android.widget.*;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.exoplayer.ExoPlayer;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,6 +48,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private boolean playing;
     private SlidingUpPanelLayout slidingLayout;
     private MyNotification notif;
+    private ObjectAnimator colorFade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +78,28 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         populate(choice);
+    }
+
+    /*@Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putParcelable("player", playlist.getPlayer());
+    }*/
+
+    public void blink() {
+        colorFade = ObjectAnimator.ofObject(findViewById(R.id.imageBottom), "backgroundColor", new ArgbEvaluator(), Color.argb(255, 255, 255, 255), Color.parseColor("#262626"));
+        colorFade.setDuration(2000);
+        colorFade.setRepeatCount(ObjectAnimator.INFINITE);
+        colorFade.setRepeatMode(ObjectAnimator.REVERSE);
+        colorFade.start();
+    }
+
+    public void stopBlinking() {
+        if(colorFade != null) {
+            colorFade.cancel();
+            colorFade.setTarget(null);
+            colorFade = null;
+            findViewById(R.id.imageBottom).setBackgroundColor(Color.parseColor("#262626"));
+        }
     }
 
     @Override
@@ -167,6 +189,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 } else if (id == R.id.nav_all) {
                     setTitle(choice.ALL.getLongName());
                     populate(choice.ALL);
+                    slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 } else if (id == R.id.nav_home) {
                     Intent myIntent = new Intent(PlayListView.this, Main.class);
                     myIntent.putExtra("user", currentUser);
@@ -201,7 +224,11 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         TextView descriptionInfo = (TextView) findViewById(R.id.descriptionText);
         TextView songTitleSlider = (TextView) findViewById(R.id.listHeader);
         TextView songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
-        playlist = new PlayList(choice, this, ipv, currentUser);
+        if(playlist != null) {
+            ExoPlayer recoverPlayer = playlist.getPlayer();
+            playlist = new PlayList(choice, this, ipv, currentUser, recoverPlayer);
+        } else
+            playlist = new PlayList(choice, this, ipv, currentUser, null);
         playlist.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
         if(choice == PlayListChoice.LIKES) {
             playlist.setCurrentUser(currentUser);

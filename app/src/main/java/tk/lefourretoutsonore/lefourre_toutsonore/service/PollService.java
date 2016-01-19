@@ -49,9 +49,9 @@ public class PollService extends IntentService {
         if (!isNetworkAvailable)
             return;
 
-        String resultId = fetchLastSound();
-        String lastSongSaved = getLastSaved();
-        if (!resultId.equals(lastSongSaved) && !resultId.equals("")) {
+        int resultId = Integer.getInteger(fetchLastSound());
+        int lastSongSaved = Integer.getInteger(getLastSaved());
+        if (resultId > lastSongSaved) {
             Log.i(TAG, "Got a new result: " + resultId);
             Intent myIntent = new Intent(this, Launcher.class);
             myIntent.putExtra("playlist", "all");
@@ -108,6 +108,8 @@ public class PollService extends IntentService {
         requestQueue.add(jsObjRequest);
         try {
             lastSong = future.get(); // this will block (forever)
+            if(lastSong.equals(""))
+                lastSong = "0";
             Log.i(TAG, "lastSongID = " + lastSong);
 
         } catch (InterruptedException e) {

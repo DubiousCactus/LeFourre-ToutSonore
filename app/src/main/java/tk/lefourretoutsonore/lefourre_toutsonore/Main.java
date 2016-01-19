@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.exoplayer.ExoPlayer;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.Serializable;
@@ -53,7 +54,7 @@ public class Main extends AppCompatActivity {
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         if((getIntent().getSerializableExtra("choice")) != null) {
-            playlist = new PlayList((PlayListChoice) getIntent().getSerializableExtra("choice"), this, null, currentUser);
+            playlist = new PlayList((PlayListChoice) getIntent().getSerializableExtra("choice"), this, null, currentUser, null);
             playlist.retrieveFromDisk();
             slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             listView = (ListView) findViewById(R.id.songsList);

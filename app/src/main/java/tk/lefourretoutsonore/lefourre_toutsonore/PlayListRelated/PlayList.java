@@ -1,11 +1,19 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.drm.DrmStore;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.android.volley.AuthFailureError;
@@ -87,7 +95,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private String videoUrl;
     private Uri contentUri;
 
-    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser) {
+    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser, ExoPlayer exoPlayer) {
         this.name = choice.toString();
         this.choice = choice;
         this.context = context;
@@ -96,8 +104,12 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         count = 0;
         this.ipv = ipv;
         songIndex = 0;
-        exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
-        exoPlayer.addListener(this);
+        if(exoPlayer == null)
+            this.exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
+        else
+            this.exoPlayer = exoPlayer;
+
+        this.exoPlayer.addListener(this);
         requestQueue = Volley.newRequestQueue(context);
     }
 
@@ -105,6 +117,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if(playbackState == ExoPlayer.STATE_READY && playWhenReady == true) {
+            ((PlayListView) context).stopBlinking();
             ipv.setMax((int) getSongDuration());
             ipv.start();
             if(!songList.get(songIndex).getCoverUrl().isEmpty())
@@ -168,6 +181,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public int getSongIndex() {
         return songIndex;
+    }
+
+    public ExoPlayer getPlayer() {
+        return exoPlayer;
     }
 
     public void fetchSounds() {
@@ -248,13 +265,16 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
+        ((PlayListView) context).stopBlinking();
         if(choice == PlayListChoice.LIKES)
             ipv.setAction2Selected(true);
         else
             ipv.setAction2Selected(songList.get(songIndex).getLiked());
-        ipv.setCoverDrawable(R.drawable.loading);
+        
+        ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
         ipv.stop();
+        exoPlayer.stop();
         Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
         updateSongInfoDisplay();
@@ -427,6 +447,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     private void updateSongInfoDisplay() {
+        ((PlayListView) context).blink();
         Song currentSong = songList.get(songIndex);
         songInfo.setText(currentSong.getArtist() + " - " + songList.get(songIndex).getTitle());
         likesInfo.setText(currentSong.getLikes() + " ♥");

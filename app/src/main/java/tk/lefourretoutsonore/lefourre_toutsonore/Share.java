@@ -66,7 +66,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(Share.this, "Son ajouté !", Toast.LENGTH_SHORT).show();
-                        finish();
+                        Share.this.finish();
                     }
                 }, Share.this) {
                     @Override

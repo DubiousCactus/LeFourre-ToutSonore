@@ -138,54 +138,56 @@
                 android:background="#262626"
                 android:layout_alignParentBottom="true"/>
 
-            <RelativeLayout
-                android:id="@+id/play_button_layout"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/circle"
-                android:layout_marginTop="12dp"
-                android:layout_alignTop="@+id/imageBottom"
-                android:layout_alignParentRight="true"
-                android:layout_marginRight="20dp"
-                android:clickable="true"
-                android:focusable="true" >
 
-                <ImageView
-                    android:id="@+id/control"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:layout_centerInParent="true"
-                    android:background="@drawable/play"
-                    android:duplicateParentState="true" />
+                <RelativeLayout
+                    android:id="@+id/play_button_layout"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/circle"
+                    android:layout_marginTop="5dp"
+                    android:layout_alignTop="@+id/imageBottom"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="20dp"
+                    android:clickable="true"
+                    android:focusable="true" >
 
-            </RelativeLayout>
+                    <ImageView
+                        android:id="@+id/control"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/play"
+                        android:duplicateParentState="true" />
 
-            <TextView
-                android:id="@+id/listHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Liste d'attente"
-                android:layout_alignTop="@+id/imageBottom"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="20dp"
-                android:textSize="18sp"
-                android:textColor="#EEEEEE"/>
-            <TextView
-                android:id="@+id/listSubHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignTop="@+id/listHeader"
-                android:layout_marginTop="20dp"
-                android:layout_marginLeft="30dp"
-                android:textSize="12sp"
-                android:textColor="#9c9c9c"/>
+                </RelativeLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#80DDDDDD"
-                android:layout_margin="20dp"
-                android:layout_below="@+id/listHeader"/>
+                <TextView
+                    android:id="@+id/listHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Liste d'attente"
+                    android:layout_alignTop="@+id/imageBottom"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="20dp"
+                    android:textSize="18sp"
+                    android:textColor="#EEEEEE"/>
+
+                <TextView
+                    android:id="@+id/listSubHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignTop="@+id/listHeader"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginLeft="30dp"
+                    android:textSize="12sp"
+                    android:textColor="#9c9c9c"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#80DDDDDD"
+                    android:layout_margin="20dp"
+                    android:layout_below="@+id/listHeader"/>
 
             <ListView
                 android:id="@+id/songsList"

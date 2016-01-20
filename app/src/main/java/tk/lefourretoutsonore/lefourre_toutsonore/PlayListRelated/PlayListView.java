@@ -20,8 +20,6 @@ import android.widget.*;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -91,7 +89,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }*/
 
     public void blink() {
-        colorFade = ObjectAnimator.ofObject(findViewById(R.id.imageBottom), "backgroundColor", new ArgbEvaluator(), Color.argb(255, 255, 255, 255), Color.parseColor("#262626"));
+        colorFade = ObjectAnimator.ofObject(findViewById(R.id.imageBottom), "backgroundColor", new ArgbEvaluator(), Color.argb(200, 0, 0, 210), Color.parseColor("#262626"));
         colorFade.setDuration(2000);
         colorFade.setRepeatCount(ObjectAnimator.INFINITE);
         colorFade.setRepeatMode(ObjectAnimator.REVERSE);

@@ -1,19 +1,10 @@
 package tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
-import android.drm.DrmStore;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.android.volley.AuthFailureError;
@@ -269,7 +260,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             ipv.setAction2Selected(true);
         else
             ipv.setAction2Selected(songList.get(songIndex).getLiked());
-        
+
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
         ipv.stop();

@@ -1,29 +1,25 @@
 package tk.lefourretoutsonore.lefourre_toutsonore;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
-
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.widget.LoginButton;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import org.acra.ACRA;
+import org.acra.annotation.ReportsCrashes;
 import java.util.Arrays;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 import tk.lefourretoutsonore.lefourre_toutsonore.service.PollService;
+
+@ReportsCrashes(
+        formUri = "http://lefourretoutsonore.tk/service/bugReport"
+)
 
 public class Launcher extends AppCompatActivity {
     private CallbackManager callbackManager;
@@ -34,6 +30,7 @@ public class Launcher extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ACRA.init(this.getApplication());
         toShareWeGo = false;
         // Get intent, action and MIME type
         Intent intent = getIntent();

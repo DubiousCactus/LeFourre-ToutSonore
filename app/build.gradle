@@ -7,8 +7,8 @@ android {
         applicationId "tk.lefourretoutsonore.lefourre_toutsonore"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 4
+        versionName "1.0.3"
     }
     buildTypes {
         release {
@@ -29,11 +29,12 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:22.0.+'
     compile 'com.mcxiaoke.volley:library:1.0.17'
     compile 'com.facebook.android:facebook-android-sdk:4.7.0'
-    compile 'com.github.iammert:InteractivePlayerView:f4f6490290'
+    compile 'com.github.M4gicT0:InteractivePlayerView:1'
     // exoplayer dependency
     compile 'com.google.android.exoplayer:exoplayer:r1.5.0'
     // okhttp requests
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.sothree.slidinguppanel:library:3.2.1'
     compile 'com.google.android.gms:play-services-ads:8.3.0'
+    compile 'ch.acra:acra:4.7.0'
 }

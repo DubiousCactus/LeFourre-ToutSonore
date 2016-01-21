@@ -11,8 +11,6 @@ import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
  */
 public class HelperActivity extends Activity {
 
-    private HelperActivity ctx;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
@@ -21,9 +19,9 @@ public class HelperActivity extends Activity {
         Log.i("debug", "helperactivity called : " + action);
         assert action != null;
         if(action.equals("play"))
-            PlayList.resume();
+            DataHolder.getInstance().getPlaylist().resume();
         else if(action.equals("pause"))
-            PlayList.pause();
+            DataHolder.getInstance().getPlaylist().pause();
 
         finish();
     }

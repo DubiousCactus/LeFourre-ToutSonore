@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.Map;
 import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
+import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
@@ -60,8 +61,8 @@ import tk.lefourretoutsonore.lefourre_toutsonore.User;
  */
 public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetcher.ManifestCallback<MediaPresentationDescription>, UtcTimingElementResolver.UtcTimingCallback {
 
-    private int songIndex;
-    private ArrayList<Song> songList;
+    private static int songIndex;
+    private static ArrayList<Song> songList;
     private int count;
     private String name;
     private Context context;
@@ -86,24 +87,27 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private String videoUrl;
     private Uri contentUri;
 
-    public PlayList(PlayListChoice choice, Context context, InteractivePlayerView ipv, User currentUser, ExoPlayer exoPlayer) {
-        this.name = choice.toString();
-        this.choice = choice;
-        this.context = context;
-        this.currentUser = currentUser;
+    public PlayList() {
+        Log.i("PlayList", "creating playList");
+        currentUser = DataHolder.getInstance().getCurrentUser();
         songList = new ArrayList<>();
         count = 0;
-        this.ipv = ipv;
         songIndex = 0;
-        if(exoPlayer == null)
-            this.exoPlayer = ExoPlayer.Factory.newInstance(1, 1000, 5000);
-        else
-            this.exoPlayer = exoPlayer;
+        if(exoPlayer == null) {
+            exoPlayer = DataHolder.getInstance().getPlayer();
+            exoPlayer.addListener(this);
+        }
+    }
 
-        this.exoPlayer.addListener(this);
+    public void setContext(Context context) {
+        this.context = context;
         requestQueue = Volley.newRequestQueue(context);
     }
 
+    public void setChoice(PlayListChoice choice) {
+        this.choice = choice;
+        this.name = choice.toString();
+    }
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
@@ -154,10 +158,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         this.count = count;
     }
 
-    public void setCurrentUser(User user) {
-        currentUser = user;
-    }
-
     public ArrayList<Song> getSongList() {
         return songList;
     }
@@ -176,6 +176,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public ExoPlayer getPlayer() {
         return exoPlayer;
+    }
+
+    public PlayListChoice getChoice() {
+        return choice;
     }
 
     public void fetchSounds() {
@@ -235,7 +239,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         }){
             @Override
             protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<String, String>();
+                Map<String,String> params = new HashMap<>();
                 params.put("son", String.valueOf(songList.get(songIndex).getId()));
                 params.put("partageur", String.valueOf(currentUser.getId()));
                 params.put("liked", String.valueOf(songList.get(songIndex).getLiked()));
@@ -256,6 +260,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
+        this.ipv = DataHolder.getInstance().getIpv();
         if(choice == PlayListChoice.LIKES)
             ipv.setAction2Selected(true);
         else
@@ -408,24 +413,25 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public static void pause() {
         exoPlayer.setPlayWhenReady(false);
-        ipv.stop();
+        if(ipv != null)
+            ipv.stop();
     }
 
     public static void resume() {
         exoPlayer.setPlayWhenReady(true);
     }
 
-    public static void previous() {
+    public void previous() {
 
     }
 
-    public static void next() {
+    public void next() {
 
     }
 
     public boolean isPlaying() {
         boolean isPlaying = false;
-        if(exoPlayer.getCurrentPosition() > 0)
+        if(exoPlayer != null && exoPlayer.getCurrentPosition() > 0)
             isPlaying = true;
 
         return isPlaying;
@@ -436,6 +442,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             return exoPlayer.getDuration()/1000;
         else
             return 123;
+    }
+
+    public int getCurrentPosition() {
+        return ipv.getProgress();
     }
 
     private void updateSongInfoDisplay() {

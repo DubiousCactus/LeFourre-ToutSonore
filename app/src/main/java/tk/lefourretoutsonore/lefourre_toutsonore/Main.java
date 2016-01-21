@@ -10,12 +10,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
@@ -30,8 +35,6 @@ public class Main extends AppCompatActivity {
     private NavigationView navigationView;
     private User currentUser;
     private SlidingUpPanelLayout slidingLayout;
-    private PlayList playlist;
-    private ListView listView;
 
     private PlayListChoice[] titleArray = new PlayListChoice[]{PlayListChoice.REGGAE, PlayListChoice.ELECTRO,
             PlayListChoice.TRANCE, PlayListChoice.POP, PlayListChoice.CORE, PlayListChoice.HIPHOP, PlayListChoice.ROCK};
@@ -42,33 +45,24 @@ public class Main extends AppCompatActivity {
         setTitle("Le Fourre-Tout Sonore");
         setContentView(R.layout.activity_main);
         if(currentUser == null)
-            currentUser = (User) getIntent().getSerializableExtra("user");
-        initCards();
-        initDrawer();
-        /*AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);*/
+            currentUser = DataHolder.getInstance().getCurrentUser();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        if((getIntent().getSerializableExtra("choice")) != null) {
-            playlist = new PlayList((PlayListChoice) getIntent().getSerializableExtra("choice"), this, null, currentUser, null);
-            playlist.retrieveFromDisk();
-            slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-            listView = (ListView) findViewById(R.id.songsList);
-            PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
-            listView.setAdapter(adapter);
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    playlist.pause();
-                    playlist.play(position);
-                    slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                }
-            });
-        } else {
-            slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+        initCards();
+        initDrawer();
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+        if(DataHolder.getInstance().getPlayer() == null) {
+            Log.i("main", "first run !");
+            DataHolder.getInstance().setPlayer(ExoPlayer.Factory.newInstance(1, 1000, 5000));
+            DataHolder.getInstance().setPlaylist(new PlayList());
         }
+    }
+
+    protected void onResume() {
+        super.onResume();
     }
 
     public void initDrawer() {
@@ -84,7 +78,6 @@ public class Main extends AppCompatActivity {
 
                 if (id == R.id.nav_all) {
                     myIntent.putExtra("choice", PlayListChoice.ALL);
-                    myIntent.putExtra("user", currentUser);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_ranking) {
                     myIntent = new Intent(Main.this, Ranking.class);
@@ -92,7 +85,6 @@ public class Main extends AppCompatActivity {
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     myIntent.putExtra("choice", PlayListChoice.LIKES);
-                    myIntent.putExtra("user", currentUser);
                     Main.this.startActivity(myIntent);
                 }
 

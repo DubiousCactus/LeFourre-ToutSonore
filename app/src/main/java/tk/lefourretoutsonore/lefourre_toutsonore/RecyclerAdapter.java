@@ -73,8 +73,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(context, PlayListView.class);
-                myIntent.putExtra("choice", choiceSource[position]);
-                myIntent.putExtra("user", currentUser);
+                DataHolder.getInstance().getPlaylist().setChoice(choiceSource[position]);
                 context.startActivity(myIntent);
             }
         });
@@ -111,9 +110,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
 
     public void fetchCount(final EventViewHolder holder, final int position) {
         Log.i("fetchCount", "Fetching count for " + holder.title.getText());
-        PlayList pl = new PlayList(choiceSource[position], context, null, null, null);
+        PlayList pl = DataHolder.getInstance().getPlaylist();
+        pl.setChoice(choiceSource[position]);
         if(pl.retrieveFromDisk())
             holder.counter.setText(pl.getCount() + " ajouts");
+
     }
 
     @Override

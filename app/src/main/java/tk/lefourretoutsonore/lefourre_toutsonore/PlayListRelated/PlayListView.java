@@ -19,13 +19,15 @@ import android.view.View;
 import android.widget.*;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.Iterator;
 import co.mobiwise.library.InteractivePlayerView;
 import co.mobiwise.library.OnActionClickedListener;
+import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.MyNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
@@ -38,10 +40,9 @@ import tk.lefourretoutsonore.lefourre_toutsonore.User;
  */
 
 public class PlayListView extends AppCompatActivity implements Response.Listener<JSONObject>, Response.ErrorListener {
+
     private NavigationView navigationView;
-    private PlayList playlist;
     private ListView listView;
-    private PlayListChoice choice;
     private User currentUser;
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
@@ -53,40 +54,59 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        playing = false;
-        choice = (PlayListChoice) getIntent().getSerializableExtra("choice");
-        currentUser = (User) getIntent().getSerializableExtra("user");
-        setTitle(choice.getLongName());
+        if(DataHolder.getInstance().getPlaylist().isPlaying())
+            playing = true;
+        else
+            playing = false;
+        currentUser = DataHolder.getInstance().getCurrentUser();
+        setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
         setContentView(R.layout.activity_playlist);
         initDrawer();
-        /*AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);*/
+        mAdView.loadAd(adRequest);
         notif = new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
         listView = (ListView) findViewById(R.id.songsList);
         ipv = (InteractivePlayerView) findViewById(R.id.ipv);
         ipv.setMax(123);
+        if(playing) {
+            ipv.setMax((int) DataHolder.getInstance().getPlaylist().getSongDuration());
+            ipv.setProgress(DataHolder.getInstance().getPlaylist().getCurrentPosition());
+            ipv.start();
+            ipv.setCoverURL(DataHolder.getInstance().getPlaylist().getSongList().get(DataHolder.getInstance().getPlaylist().getSongIndex()).getCoverUrl());
+        } else
         ipv.setOnActionClickedListener(new OnActionClickedListener() {
             @Override
             public void onActionClicked(int i) {
                 switch (i) {
                     case 2:
-                        playlist.likeSong();
+                        DataHolder.getInstance().getPlaylist().likeSong();
                         break;
                 }
             }
         });
+        DataHolder.getInstance().setIpv(ipv);
         initListeners();
+        if(playing)
+            (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
-        populate(choice);
+        populate();
     }
 
-    /*@Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putParcelable("player", playlist.getPlayer());
-    }*/
+    @Override
+    protected void onStop() {
+        ipv.stop();
+        DataHolder.getInstance().setIpv(ipv);
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     public void blink() {
         colorFade = ObjectAnimator.ofObject(findViewById(R.id.imageBottom), "backgroundColor", new ArgbEvaluator(), Color.argb(200, 0, 0, 210), Color.parseColor("#262626"));
@@ -108,22 +128,17 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause()  {
+    public void onPause() {
+        ipv.stop();
+        DataHolder.getInstance().setIpv(ipv);
         super.onPause();
     }
 
     @Override
-    public void onDestroy() {
-        notif.notificationCancel();
-        playlist.destroy();
-        super.onDestroy();
+    public void onResume() {
+        Log.i("PlayListView", "onResume called");
+        super.onResume();
     }
-
 
     public void initListeners() {
         ipv.setCoverDrawable(R.drawable.no_cover);
@@ -132,17 +147,17 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             public void onClick(View v) {
                 playing = true;
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                playlist.play(playlist.getSongIndex() + 1);
+                DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex() + 1);
             }
         });
 
         findViewById(R.id.previous_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (playlist.getSongIndex() >= 0) {
+                if (DataHolder.getInstance().getPlaylist().getSongIndex() >= 0) {
                     playing = true;
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    playlist.play(playlist.getSongIndex() - 1);
+                    DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex() - 1);
                 }
             }
         });
@@ -150,19 +165,19 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         findViewById(R.id.play_button_layout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!playing) {
+                if (!playing) { //Click on play
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     ipv.stop();
-                    if(playlist.isPlaying())
-                        playlist.resume();
+                    if(DataHolder.getInstance().getPlaylist().isPlaying())
+                        DataHolder.getInstance().getPlaylist().resume();
                     else
-                        playlist.play(playlist.getSongIndex());
+                        DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex());
                     playing = true;
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                } else {
+                } else { //Click on pause
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
                     ipv.stop();
-                    playlist.pause();
+                    DataHolder.getInstance().getPlaylist().pause();
                     playing = false;
                 }
             }
@@ -173,8 +188,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playing = true;
                 ipv.stop();
-                playlist.pause();
-                playlist.play(position);
+                if(DataHolder.getInstance().getPlaylist().isPlaying())
+                    DataHolder.getInstance().getPlaylist().pause();
+                DataHolder.getInstance().getPlaylist().play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
@@ -192,20 +208,21 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     Intent myIntent = new Intent(PlayListView.this, Ranking.class);
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_all) {
-                    setTitle(choice.ALL.getLongName());
-                    populate(choice.ALL);
+                    setTitle(PlayListChoice.ALL.getLongName());
+                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.ALL);
+                    populate();
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 } else if (id == R.id.nav_home) {
                     Intent myIntent = new Intent(PlayListView.this, Main.class);
-                    myIntent.putExtra("user", currentUser);
                     /*if(!playlist.getSongList().isEmpty()) {
                         myIntent.putExtra("choice", choice);
                         myIntent.putExtra("songIndex", playlist.getSongIndex());
                     }*/
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
-                    setTitle(choice.LIKES.getLongName());
-                    populate(choice.LIKES);
+                    setTitle(PlayListChoice.LIKES.getLongName());
+                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.LIKES);
+                    populate();
                 }
 
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -221,7 +238,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         toggle.syncState();
     }
 
-    private void populate(PlayListChoice choice) {
+    private void populate() {
         TextView songInfo = (TextView) findViewById(R.id.songText);
         TextView sharerInfo = (TextView) findViewById(R.id.singerText);
         TextView likesInfo = (TextView) findViewById(R.id.likesCountText);
@@ -229,19 +246,11 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         TextView descriptionInfo = (TextView) findViewById(R.id.descriptionText);
         TextView songTitleSlider = (TextView) findViewById(R.id.listHeader);
         TextView songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
-        if(playlist != null) {
-            ExoPlayer recoverPlayer = playlist.getPlayer();
-            playlist = new PlayList(choice, this, ipv, currentUser, recoverPlayer);
-        } else
-            playlist = new PlayList(choice, this, ipv, currentUser, null);
-        playlist.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
-        if(choice == PlayListChoice.LIKES) {
-            playlist.setCurrentUser(currentUser);
-            Log.i("id", "id = " + currentUser.getId());
-        }
+        DataHolder.getInstance().getPlaylist().setContext(this);
+        DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
          dialog = ProgressDialog.show(this, "",
                 "Chargement...", true);
-        playlist.fetchSounds();
+        DataHolder.getInstance().getPlaylist().fetchSounds();
     }
 
     @Override
@@ -250,7 +259,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            Intent myIntent = new Intent(PlayListView.this, Main.class);
+            myIntent.putExtra("user", currentUser);
+            PlayListView.this.startActivity(myIntent);
         }
     }
 
@@ -279,9 +290,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onErrorResponse(VolleyError error) {
         Toast.makeText(this, "Erreur réseau", Toast.LENGTH_SHORT).show();
-        if(playlist.retrieveFromDisk()) {
+        if(DataHolder.getInstance().getPlaylist().retrieveFromDisk()) {
             listView = (ListView) findViewById(R.id.songsList);
-            PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
+            PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
             listView.setAdapter(adapter);
             Toast.makeText(PlayListView.this, "Chargement depuis le cache", Toast.LENGTH_SHORT).show();
         } else
@@ -317,13 +328,13 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked, playlist);
-            playlist.addSong(songItem);
+            Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked, DataHolder.getInstance().getPlaylist());
+            DataHolder.getInstance().getPlaylist().addSong(songItem);
             count++;
         }
-        playlist.setCount(count);
-        playlist.saveOnDisk();
-        PlaylistAdapter adapter = new PlaylistAdapter(this, playlist);
+        DataHolder.getInstance().getPlaylist().setCount(count);
+        DataHolder.getInstance().getPlaylist().saveOnDisk();
+        PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
         listView.setAdapter(adapter);
         dialog.dismiss();
     }

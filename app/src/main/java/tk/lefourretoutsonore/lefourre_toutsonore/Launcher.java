@@ -17,10 +17,6 @@ import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 import tk.lefourretoutsonore.lefourre_toutsonore.service.PollService;
 
-@ReportsCrashes(
-        formUri = "http://lefourretoutsonore.tk/service/bugReport"
-)
-
 public class Launcher extends AppCompatActivity {
     private CallbackManager callbackManager;
     private ProfileTracker mProfileTracker;
@@ -71,6 +67,7 @@ public class Launcher extends AppCompatActivity {
 
         if (enableButtons && profile != null) {
             User user = new User(profile.getName(), Long.valueOf(profile.getId()));
+            DataHolder.getInstance().setCurrentUser(user);
             if(getIntent().getStringExtra("playlist") != null) {
                 myIntent = new Intent(Launcher.this, PlayListView.class);
                 if(getIntent().getStringExtra("playlist").equals("all"))
@@ -78,7 +75,6 @@ public class Launcher extends AppCompatActivity {
             } else if(!toShareWeGo)
                 myIntent = new Intent(Launcher.this, Main.class);
 
-            myIntent.putExtra("user", user);
             Launcher.this.startActivity(myIntent);
             finish();
         }

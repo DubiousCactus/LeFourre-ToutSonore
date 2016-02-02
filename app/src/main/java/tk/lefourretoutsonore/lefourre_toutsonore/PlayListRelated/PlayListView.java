@@ -51,6 +51,14 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private MyNotification notif;
     private ObjectAnimator colorFade;
 
+    private TextView songInfo;
+    private TextView sharerInfo;
+    private TextView likesInfo;
+    private TextView stylesInfo;
+    private TextView descriptionInfo;
+    private TextView songTitleSlider;
+    private TextView songArtistSlider;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,13 +69,20 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         currentUser = DataHolder.getInstance().getCurrentUser();
         setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
         setContentView(R.layout.activity_playlist);
+        sharerInfo = (TextView) findViewById(R.id.singerText);
+        songInfo = (TextView) findViewById(R.id.songText);
+        likesInfo = (TextView) findViewById(R.id.likesCountText);
+        stylesInfo = (TextView) findViewById(R.id.stylesText);
+        descriptionInfo = (TextView) findViewById(R.id.descriptionText);
+        songTitleSlider = (TextView) findViewById(R.id.listHeader);
+        songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         initDrawer();
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
         notif = new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         listView = (ListView) findViewById(R.id.songsList);
         ipv = (InteractivePlayerView) findViewById(R.id.ipv);
         ipv.setMax(123);
@@ -75,18 +90,22 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             ipv.setMax((int) DataHolder.getInstance().getPlaylist().getSongDuration());
             ipv.setProgress(DataHolder.getInstance().getPlaylist().getCurrentPosition());
             ipv.start();
-            ipv.setCoverURL(DataHolder.getInstance().getPlaylist().getSongList().get(DataHolder.getInstance().getPlaylist().getSongIndex()).getCoverUrl());
+            DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
+            DataHolder.getInstance().getPlaylist().updateSongInfoDisplay(false);
+            String coverURl = DataHolder.getInstance().getPlaylist().getSongList().get(DataHolder.getInstance().getPlaylist().getSongIndex()).getCoverUrl();
+            if(coverURl != null)
+                ipv.setCoverURL(coverURl);
         } else
-        ipv.setOnActionClickedListener(new OnActionClickedListener() {
-            @Override
-            public void onActionClicked(int i) {
-                switch (i) {
-                    case 2:
-                        DataHolder.getInstance().getPlaylist().likeSong();
-                        break;
+            ipv.setOnActionClickedListener(new OnActionClickedListener() {
+                @Override
+                public void onActionClicked(int i) {
+                    switch (i) {
+                        case 2:
+                            DataHolder.getInstance().getPlaylist().likeSong();
+                            break;
+                    }
                 }
-            }
-        });
+            });
         DataHolder.getInstance().setIpv(ipv);
         initListeners();
         if(playing)
@@ -239,13 +258,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     private void populate() {
-        TextView songInfo = (TextView) findViewById(R.id.songText);
-        TextView sharerInfo = (TextView) findViewById(R.id.singerText);
-        TextView likesInfo = (TextView) findViewById(R.id.likesCountText);
-        TextView stylesInfo = (TextView) findViewById(R.id.stylesText);
-        TextView descriptionInfo = (TextView) findViewById(R.id.descriptionText);
-        TextView songTitleSlider = (TextView) findViewById(R.id.listHeader);
-        TextView songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         DataHolder.getInstance().getPlaylist().setContext(this);
         DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
          dialog = ProgressDialog.show(this, "",
@@ -260,7 +272,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             drawer.closeDrawer(GravityCompat.START);
         } else {
             Intent myIntent = new Intent(PlayListView.this, Main.class);
-            myIntent.putExtra("user", currentUser);
             PlayListView.this.startActivity(myIntent);
         }
     }
@@ -302,6 +313,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onResponse(JSONObject response) {
+        DataHolder.getInstance().getPlaylist().reset();
         int count = 0;
         for(Iterator it = response.keys(); it.hasNext();) { //Parsing list of songs
             String songId = (String) it.next(); //Selecting song

@@ -45,7 +45,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         stylesDone = false;
         title_artistDone = false;
         song = new Song();
-        currentUser = (User) getIntent().getSerializableExtra("user");
+        currentUser = DataHolder.getInstance().getCurrentUser();
         setContentView(R.layout.activity_share);
 
         initStyles();
@@ -85,7 +85,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                 Log.i("request", request.toString());
                 requestQueue.add(request);
                 progressDialog = ProgressDialog.show(Share.this, "",
-                        "Chargement...", true);
+                        "Ajout en cours...", true);
             }
         });
         progressDialog = ProgressDialog.show(this, "",
@@ -94,6 +94,12 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
             parseSoundCloud(getIntent().getStringExtra("sharedText"));
         else if(getIntent().getStringExtra("function").equals("parseYoutube"))
             parseYoutube(getIntent().getStringExtra("sharedText"));
+    }
+
+    @Override
+    protected void onStop() {
+        finish();
+        super.onStop();
     }
 
     private void initStyles() {
@@ -120,6 +126,8 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                     Style style = new Style(genre, id, name);
                     styles.add(style);
                 }
+
+                progressDialog.dismiss();
             }
         }, this);
         requestQueue.add(jsObjRequest);
@@ -210,6 +218,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
 
     @Override
     public void onErrorResponse(VolleyError error) {
+        progressDialog.dismiss();
         Toast.makeText(Share.this, "Erreur réseau", Toast.LENGTH_SHORT).show();
     }
 
@@ -230,16 +239,11 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         EditText vTitle = (EditText) findViewById(R.id.share_title);
         EditText vArtist = (EditText) findViewById(R.id.share_artist);
         vTitle.setText(title);
-        vTitle.setFocusable(true);
-        vTitle.setClickable(true);
         vArtist.setText(artist);
-        vTitle.setFocusable(true);
-        vTitle.setClickable(true);
         title_artistDone = true;
         if(stylesDone)
             findViewById(R.id.share_button).setClickable(true);
         song.setTitle(title);
         song.setArtist(artist);
-        progressDialog.dismiss();
     }
 }

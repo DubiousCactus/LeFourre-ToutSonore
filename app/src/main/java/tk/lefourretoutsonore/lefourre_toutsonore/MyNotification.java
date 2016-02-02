@@ -26,6 +26,7 @@ public class MyNotification {
                 .setOngoing(true);
 
         remoteView = new RemoteViews(parent.getPackageName(), R.layout.player_notification);
+        //RemoteViews expandedView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.big_notification);
 
         //set the button listeners
         setListeners(remoteView);

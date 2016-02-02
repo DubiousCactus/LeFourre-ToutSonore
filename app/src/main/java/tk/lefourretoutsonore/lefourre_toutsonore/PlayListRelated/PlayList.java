@@ -123,7 +123,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         else if(playbackState == ExoPlayer.STATE_ENDED) {
             ipv.stop();
             songIndex++;
-            updateSongInfoDisplay();
+            updateSongInfoDisplay(true);
             play(songIndex);
         } else if(playbackState == ExoPlayer.STATE_IDLE) {
             ipv.stop();
@@ -272,7 +272,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         exoPlayer.stop();
         Song currentSong = songList.get(songIndex);
         this.songIndex = songIndex;
-        updateSongInfoDisplay();
+        updateSongInfoDisplay(true);
 
         if(currentSong.getLink().contains("soundcloud")) {
             playSoundCloud(currentSong);
@@ -349,12 +349,15 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     private void playYoutube(final Song currentSong) {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        StringRequest request = new StringRequest(Request.Method.GET, "http://www.youtube.com/get_video_info?&video_id=" + currentSong.getLink().substring(currentSong.getLink().indexOf("=") + 1), new Response.Listener<String>() {
+        String videoId = currentSong.getLink().substring(currentSong.getLink().indexOf("=") + 1);
+        String coverUrl = "http://img.youtube.com/vi/" + videoId + "/0.jpg";
+        songList.get(songIndex).setCoverUrl(coverUrl);
+        StringRequest request = new StringRequest(Request.Method.GET, "http://www.youtube.com/get_video_info?&video_id=" + videoId, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
                     String result = URLDecoder.decode(response, "UTF-8");
-                    if(!result.startsWith("error")) {
+                    if(!result.startsWith("error") && !result.contains("fail")) {
                         String firstPart = URLDecoder.decode(result.substring(result.indexOf("dashmpd=") + 8), "UTF-8");
                         videoUrl = URLDecoder.decode(firstPart.substring(0, firstPart.indexOf("&")), "UTF-8");
                         contentUri = Uri.parse(videoUrl);
@@ -365,6 +368,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                         preparePlayer();
                     } else {
                         Toast.makeText(context, "Contenu protégé - Lecture impossible", Toast.LENGTH_SHORT).show();
+                        ((PlayListView) context).stopBlinking(true);
                         context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(currentSong.getLink())));
                     }
                 } catch (UnsupportedEncodingException e) {
@@ -411,14 +415,24 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         exoPlayer.release();
     }
 
-    public static void pause() {
+    public void reset() {
+        if(isPlaying()) {
+            Song playingSong = songList.get(songIndex);
+            songList.clear();
+            songList.add(playingSong);
+        } else
+            songList.clear();
+    }
+
+    public void pause() {
         exoPlayer.setPlayWhenReady(false);
         if(ipv != null)
             ipv.stop();
     }
 
-    public static void resume() {
-        exoPlayer.setPlayWhenReady(true);
+    public void resume() {
+        if(isPlaying())
+            exoPlayer.setPlayWhenReady(true);
     }
 
     public void previous() {
@@ -448,8 +462,9 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         return ipv.getProgress();
     }
 
-    private void updateSongInfoDisplay() {
-        ((PlayListView) context).blink();
+    public void updateSongInfoDisplay(boolean blink) {
+        if(blink)
+            ((PlayListView) context).blink();
         Song currentSong = songList.get(songIndex);
         songInfo.setText(currentSong.getArtist() + " - " + songList.get(songIndex).getTitle());
         likesInfo.setText(currentSong.getLikes() + " ♥");

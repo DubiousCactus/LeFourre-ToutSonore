@@ -27,9 +27,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="50dp"
         android:hint="Titre"
-        android:layout_gravity="center"
-        android:focusable="false"
-        android:clickable="false"/>
+        android:layout_gravity="center"/>
 
     <EditText
         android:id="@+id/share_artist"
@@ -37,9 +35,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
         android:hint="Auteur"
-        android:layout_gravity="center"
-        android:focusable="false"
-        android:clickable="false"/>
+        android:layout_gravity="center"/>
 
     <EditText
         android:id="@+id/share_description"

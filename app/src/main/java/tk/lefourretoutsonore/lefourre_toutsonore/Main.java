@@ -47,18 +47,28 @@ public class Main extends AppCompatActivity {
         if(currentUser == null)
             currentUser = DataHolder.getInstance().getCurrentUser();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
-        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
-        initCards();
-        initDrawer();
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+        slidingLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Main.this, PlayListView.class);
+                Main.this.startActivity(i);
+            }
+        });
         if(DataHolder.getInstance().getPlayer() == null) {
-            Log.i("main", "first run !");
             DataHolder.getInstance().setPlayer(ExoPlayer.Factory.newInstance(1, 1000, 5000));
             DataHolder.getInstance().setPlaylist(new PlayList());
+        } else {
+            /*PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
+            ListView listView = (ListView) findViewById(R.id.songsList);
+            listView.setAdapter(adapter);*/
         }
+        initCards();
+        initDrawer();
     }
 
     protected void onResume() {
@@ -77,14 +87,13 @@ public class Main extends AppCompatActivity {
                 Intent myIntent = new Intent(Main.this, PlayListView.class);
 
                 if (id == R.id.nav_all) {
-                    myIntent.putExtra("choice", PlayListChoice.ALL);
+                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.ALL);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_ranking) {
                     myIntent = new Intent(Main.this, Ranking.class);
-                    myIntent.putExtra("playlist", 3);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
-                    myIntent.putExtra("choice", PlayListChoice.LIKES);
+                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.LIKES);
                     Main.this.startActivity(myIntent);
                 }
 

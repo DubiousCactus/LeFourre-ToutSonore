@@ -25,7 +25,9 @@ import java.io.StreamCorruptedException;
 import java.util.concurrent.ExecutionException;
 
 import okio.Timeout;
+import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.Launcher;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 
 /**
@@ -51,10 +53,9 @@ public class PollService extends IntentService {
 
         String lastSongSaved = getLastSaved();
         String resultId = fetchLastSound();
-        if (!resultId.equals("") && !resultId.equals(lastSongSaved)) {
+        if (!resultId.equals("") && !lastSongSaved.equals("0") && !resultId.equals(lastSongSaved)) {
             Log.i(TAG, "Got a new result: " + resultId);
             Intent myIntent = new Intent(this, Launcher.class);
-            myIntent.putExtra("playlist", "all");
             PendingIntent pi = PendingIntent
                     .getActivity(this, 0, myIntent, 0);
             Notification notification = new NotificationCompat.Builder(this)

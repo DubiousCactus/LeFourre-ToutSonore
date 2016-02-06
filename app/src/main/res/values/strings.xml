@@ -9,7 +9,8 @@
     <string name="facebook_app_id">444521755710815</string>
     <string name="soundCloud_app_id">c818b360defc350d7e45840b71e117e3</string>
 
-    <string name="banner_ad_home_unit_id">ca-app-pub-4215802489067263/8214069630</string>
-    <string name="banner_ad_pl_unit_id">ca-app-pub-4215802489067263/9690802838</string>
+    <string name="banner_ad_home_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_ad_pl_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="inter_ad_pl_unit_id">ca-app-pub-3940256099942544/6300978111</string>
 
 </resources>

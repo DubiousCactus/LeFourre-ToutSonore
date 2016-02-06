@@ -41,16 +41,12 @@ import tk.lefourretoutsonore.lefourre_toutsonore.User;
 
 public class PlayListView extends AppCompatActivity implements Response.Listener<JSONObject>, Response.ErrorListener {
 
-    private NavigationView navigationView;
     private ListView listView;
-    private User currentUser;
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
     private boolean playing;
     private SlidingUpPanelLayout slidingLayout;
-    private MyNotification notif;
     private ObjectAnimator colorFade;
-
     private TextView songInfo;
     private TextView sharerInfo;
     private TextView likesInfo;
@@ -62,11 +58,8 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying())
-            playing = true;
-        else
-            playing = false;
-        currentUser = DataHolder.getInstance().getCurrentUser();
+        playing = DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying();
+        User currentUser = DataHolder.getInstance().getCurrentUser();
         setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
         setContentView(R.layout.activity_playlist);
         sharerInfo = (TextView) findViewById(R.id.singerText);
@@ -80,7 +73,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
-        notif = new MyNotification(this);
+        new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         listView = (ListView) findViewById(R.id.songsList);
@@ -216,7 +209,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     private void initDrawer() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
@@ -323,7 +316,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 if(response.get(songId) instanceof JSONObject) {
                     JSONObject song = response.getJSONObject(songId);
                     id = song.getInt("id");
-                    if(song.getJSONObject("details") instanceof JSONObject) {
+                    if(song.getJSONObject("details") != null) {
                         JSONObject songDetails = song.getJSONObject("details");
                         likes = songDetails.getInt("likes");
                         title = songDetails.getString("title");
@@ -338,7 +331,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 }
             } catch (JSONException e) { e.printStackTrace(); }
 
-            Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked, DataHolder.getInstance().getPlaylist());
+            Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked);
             DataHolder.getInstance().getPlaylist().addSong(songItem);
             count++;
         }

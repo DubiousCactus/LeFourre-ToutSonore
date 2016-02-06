@@ -32,7 +32,6 @@ import java.util.Map;
 public class Share extends AppCompatActivity implements Response.ErrorListener, Response.Listener<JSONObject> {
     private StylesAdapter stylesAdapter;
     private ArrayList<Style> styles;
-    private ArrayList<Style> selectedStyles;
     private boolean stylesDone;
     private boolean title_artistDone;
     private Song song;
@@ -193,7 +192,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
     }
 
     private void validateChoice(ArrayList<Integer> selectedItemsIndexList) {
-        selectedStyles = new ArrayList<>();
+        ArrayList<Style> selectedStyles = new ArrayList<>();
         TextView stylesDisplay = (TextView) findViewById(R.id.share_styles_display);
         for(Iterator it = selectedItemsIndexList.iterator(); it.hasNext();) {
             Style current = styles.get((int) it.next());

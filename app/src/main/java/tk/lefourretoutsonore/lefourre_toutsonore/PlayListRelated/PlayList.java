@@ -112,7 +112,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if(playbackState == ExoPlayer.STATE_READY && playWhenReady == true) {
+        if(playbackState == ExoPlayer.STATE_READY && playWhenReady) {
             ((PlayListView) context).stopBlinking(false);
             ipv.setMax((int) getSongDuration());
             ipv.start();
@@ -188,7 +188,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         Map<String, String> params = new HashMap<>();
         params.put("genre", choice.getId());
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        String url = "";
+        String url;
         if(choice == PlayListChoice.LIKES)
             url = "http://lefourretoutsonore.tk/service/getLikesPlaylist.php?sharer=" + currentUser.getId();
         else
@@ -204,7 +204,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             oos.writeInt(count);
             oos.writeObject(songList);
             oos.close();
-        } catch (FileNotFoundException e) { e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     public boolean retrieveFromDisk() {
@@ -262,7 +262,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
-        this.ipv = DataHolder.getInstance().getIpv();
+        ipv = DataHolder.getInstance().getIpv();
         if(choice == PlayListChoice.LIKES)
             ipv.setAction2Selected(true);
         else
@@ -330,6 +330,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                             final String streamUrl = response.getString("stream_url");
                             String coverUrl = response.getString("artwork_url").replace("large.jpg", "t300x300.jpg");
                             songList.get(songIndex).setCoverUrl(coverUrl);
+                            songList.get(songIndex).setStreamUrl(streamUrl);
                             playingSong.setCoverUrl(coverUrl);
 
                             Uri builtUri = Uri.parse(streamUrl).buildUpon()

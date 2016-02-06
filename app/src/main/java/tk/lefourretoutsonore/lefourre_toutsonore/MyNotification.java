@@ -14,18 +14,16 @@ public class MyNotification {
 
     private Context parent;
     private NotificationManager nManager;
-    private NotificationCompat.Builder nBuilder;
-    private RemoteViews remoteView;
 
     public MyNotification(Context parent) {
         // TODO Auto-generated constructor stub
         this.parent = parent;
-        nBuilder = new NotificationCompat.Builder(parent)
+        NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(parent)
                 .setContentTitle("Le Fourre-Tout Sonore")
                 .setSmallIcon(R.drawable.logo_icon)
                 .setOngoing(true);
 
-        remoteView = new RemoteViews(parent.getPackageName(), R.layout.player_notification);
+        RemoteViews remoteView = new RemoteViews(parent.getPackageName(), R.layout.player_notification);
         //RemoteViews expandedView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.big_notification);
 
         //set the button listeners

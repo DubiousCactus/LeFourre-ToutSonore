@@ -15,6 +15,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
@@ -22,7 +26,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventViewHolder> {
     private PlayListChoice[] choiceSource;
     private Context context;
-    private User currentUser;
+    InterstitialAd mInterstitialAd;
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
@@ -46,10 +50,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         }
     }
 
-    public RecyclerAdapter(PlayListChoice[] choiceArgs, Context context, User currentUser) {
+    public RecyclerAdapter(PlayListChoice[] choiceArgs, Context context) {
         this.context = context;
         choiceSource = choiceArgs;
-        this.currentUser = currentUser;
+        mInterstitialAd = new InterstitialAd(context);
+        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
     }
 
     @Override
@@ -67,14 +72,33 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         return new EventViewHolder(view, context);
     }
 
+    private void requestNewInterstitial() {
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("SEE_YOUR_LOGCAT_TO_GET_YOUR_DEVICE_ID")
+                .build();
+
+        mInterstitialAd.loadAd(adRequest);
+    }
+
     @Override
     public void onBindViewHolder(final EventViewHolder holder, final int position) {
+
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                requestNewInterstitial();
+            }
+        });
+        requestNewInterstitial();
+
         holder.ban.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(context, PlayListView.class);
                 DataHolder.getInstance().getPlaylist().setChoice(choiceSource[position]);
                 context.startActivity(myIntent);
+                if (mInterstitialAd.isLoaded())
+                    mInterstitialAd.show();
             }
         });
         holder.ban.setImageResource(choiceSource[position].getBanId());

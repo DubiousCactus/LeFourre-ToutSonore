@@ -10,14 +10,10 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.TextView;
-
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -25,16 +21,10 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
-import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlaylistAdapter;
 
 public class Main extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
-    private RecyclerView.Adapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
-    private NavigationView navigationView;
     private User currentUser;
-    private SlidingUpPanelLayout slidingLayout;
 
     private PlayListChoice[] titleArray = new PlayListChoice[]{PlayListChoice.REGGAE, PlayListChoice.ELECTRO,
             PlayListChoice.TRANCE, PlayListChoice.POP, PlayListChoice.CORE, PlayListChoice.HIPHOP, PlayListChoice.ROCK};
@@ -50,7 +40,7 @@ public class Main extends AppCompatActivity {
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
-        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
         slidingLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,10 +52,6 @@ public class Main extends AppCompatActivity {
         if(DataHolder.getInstance().getPlayer() == null) {
             DataHolder.getInstance().setPlayer(ExoPlayer.Factory.newInstance(1, 1000, 5000));
             DataHolder.getInstance().setPlaylist(new PlayList());
-        } else {
-            /*PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
-            ListView listView = (ListView) findViewById(R.id.songsList);
-            listView.setAdapter(adapter);*/
         }
         initCards();
         initDrawer();
@@ -79,7 +65,7 @@ public class Main extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
@@ -112,11 +98,11 @@ public class Main extends AppCompatActivity {
     }
 
     public void initCards() {
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new RecyclerAdapter(titleArray, Main.this, currentUser);
+        RecyclerView.Adapter adapter = new RecyclerAdapter(titleArray, Main.this);
         recyclerView.setAdapter(adapter);
     }
 

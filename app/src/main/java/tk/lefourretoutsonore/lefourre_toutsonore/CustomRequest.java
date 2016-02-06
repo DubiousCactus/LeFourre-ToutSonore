@@ -37,7 +37,7 @@ public class CustomRequest extends Request<JSONObject> {
     protected Map<String, String> getParams()
             throws com.android.volley.AuthFailureError {
         return params;
-    };
+    }
 
     @Override
     protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
@@ -55,7 +55,6 @@ public class CustomRequest extends Request<JSONObject> {
 
     @Override
     protected void deliverResponse(JSONObject response) {
-        // TODO Auto-generated method stub
         listener.onResponse(response);
     }
 }

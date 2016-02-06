@@ -1,8 +1,6 @@
 package tk.lefourretoutsonore.lefourre_toutsonore;
 
-import android.content.Context;
 import java.io.Serializable;
-import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 
 /**
  * Created by transpalette on 1/2/16.
@@ -22,7 +20,7 @@ public class Song implements Serializable {
     private String streamUrl;
     private boolean liked;
 
-    public Song(int id, int likes, long sharer, String title, String artist, String styles, String link, String description, boolean liked, PlayList playlist) {
+    public Song(int id, int likes, long sharer, String title, String artist, String styles, String link, String description, boolean liked) {
         this.id = id;
         this.likes = likes;
         this.title = title;

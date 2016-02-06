@@ -11,15 +11,14 @@ import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.widget.LoginButton;
 import org.acra.ACRA;
-import org.acra.annotation.ReportsCrashes;
-import java.util.Arrays;
+import java.util.Collections;
+
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 import tk.lefourretoutsonore.lefourre_toutsonore.service.PollService;
 
 public class Launcher extends AppCompatActivity {
     private CallbackManager callbackManager;
-    private ProfileTracker mProfileTracker;
     private boolean toShareWeGo;
     private Intent myIntent;
 
@@ -39,7 +38,7 @@ public class Launcher extends AppCompatActivity {
             }
         }
         FacebookSdk.sdkInitialize(getApplicationContext());
-        mProfileTracker = new ProfileTracker() {
+        ProfileTracker mProfileTracker = new ProfileTracker() {
             @Override
             protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
                 updateUI(); //this is the third piece of code I will discuss below
@@ -49,7 +48,7 @@ public class Launcher extends AppCompatActivity {
         setContentView(R.layout.activity_launcher);
         callbackManager = CallbackManager.Factory.create();
         final LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions(Arrays.asList("public_profile, email"));
+        loginButton.setReadPermissions(Collections.singletonList("public_profile, email"));
         PollService.setServiceAlarm(Launcher.this, true);
         updateUI();
     }

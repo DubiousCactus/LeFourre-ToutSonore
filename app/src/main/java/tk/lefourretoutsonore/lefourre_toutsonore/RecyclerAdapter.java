@@ -19,6 +19,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 
+import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayList;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
@@ -86,6 +87,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.EventV
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
+                InteractivePlayerView ipv = DataHolder.getInstance().getIpv();
+                ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
+                ipv.start();
                 requestNewInterstitial();
             }
         });

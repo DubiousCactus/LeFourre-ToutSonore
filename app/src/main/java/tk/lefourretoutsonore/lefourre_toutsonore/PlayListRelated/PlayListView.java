@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.*;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -70,9 +71,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         songTitleSlider = (TextView) findViewById(R.id.listHeader);
         songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         initDrawer();
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
         new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
@@ -82,9 +80,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         if(playing) {
             (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
             ipv.setMax((int) DataHolder.getInstance().getPlaylist().getSongDuration());
-            ipv.setProgress(DataHolder.getInstance().getPlaylist().getCurrentPosition());
-            ipv.start();
             ipv.setCoverDrawable(R.drawable.no_cover);
+            ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
+            ipv.start();
             DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
             DataHolder.getInstance().getPlaylist().updateSongInfoDisplay();
             String coverURl = DataHolder.getInstance().getPlaylist().getPlayingSong().getCoverUrl();
@@ -101,6 +99,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     }
                 }
             });
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
         DataHolder.getInstance().setIpv(ipv);
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
@@ -147,7 +148,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onResume() {
-        Log.i("PlayListView", "onResume called");
         super.onResume();
     }
 
@@ -224,10 +224,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 } else if (id == R.id.nav_home) {
                     Intent myIntent = new Intent(PlayListView.this, Main.class);
-                    /*if(!playlist.getSongList().isEmpty()) {
-                        myIntent.putExtra("choice", choice);
-                        myIntent.putExtra("songIndex", playlist.getSongIndex());
-                    }*/
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     setTitle(PlayListChoice.LIKES.getLongName());

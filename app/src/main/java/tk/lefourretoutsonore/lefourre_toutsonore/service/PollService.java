@@ -132,6 +132,17 @@ public class PollService extends IntentService {
             lastSongSaved = String.valueOf(ois.readInt());
             ois.close();
         } catch (FileNotFoundException e) {
+            FileOutputStream fos;
+            try {
+                fos = openFileOutput("lastSong", Context.MODE_PRIVATE);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeInt(0);
+                oos.close();
+            } catch (FileNotFoundException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         } catch (StreamCorruptedException e) {
             e.printStackTrace();

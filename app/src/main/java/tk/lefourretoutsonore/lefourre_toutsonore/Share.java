@@ -101,6 +101,20 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         super.onStop();
     }
 
+    @Override
+    protected void onResume() {
+        if(stylesDone) {
+            title_artistDone = false;
+            progressDialog = ProgressDialog.show(this, "",
+                    "Chargement...", true);
+            if (getIntent().getStringExtra("function").equals("parseSoundCloud"))
+                parseSoundCloud(getIntent().getStringExtra("sharedText"));
+            else if (getIntent().getStringExtra("function").equals("parseYoutube"))
+                parseYoutube(getIntent().getStringExtra("sharedText"));
+        }
+        super.onResume();
+    }
+
     private void initStyles() {
         //init styles arrayList from xml file
         styles = new ArrayList<>();
@@ -125,7 +139,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                     Style style = new Style(genre, id, name);
                     styles.add(style);
                 }
-
+                stylesDone = true;
                 progressDialog.dismiss();
             }
         }, this);

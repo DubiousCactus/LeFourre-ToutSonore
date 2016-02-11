@@ -52,6 +52,7 @@ import java.util.Map;
 import co.mobiwise.library.InteractivePlayerView;
 import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
+import tk.lefourretoutsonore.lefourre_toutsonore.MyNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
@@ -300,10 +301,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         });
         if(playingSong.getSharerName().equals("none"))
             requestQueue.add(sharerRequest);
-        /*else if(playingSong.getSharerName() == DataHolder.getInstance().getCurrentUser().getName())
-            sharerInfo.setText("Ajouté par vous-même");
-        else
-            sharerInfo.setText("Ajouté par " + playingSong.getSharerName());*/
+
+        new MyNotification(context);
     }
 
     private void playSoundCloud() {
@@ -479,7 +478,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         return ipv.getProgress();
     }
 
-    public void updateSongInfoDisplay() {
+ void updateSongInfoDisplay() {
         if(playingSong.getSharerName().equals(DataHolder.getInstance().getCurrentUser().getName()))
             sharerInfo.setText("Ajouté par vous-même");
         else

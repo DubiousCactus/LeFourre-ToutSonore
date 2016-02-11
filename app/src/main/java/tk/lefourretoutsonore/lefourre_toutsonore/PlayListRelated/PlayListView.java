@@ -22,6 +22,7 @@ import com.android.volley.VolleyError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,10 +60,35 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_playlist);
+
+        final InterstitialAd mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getResources().getString(R.string.inter_ad_pl_unit_id));
+        AdRequest adRequest2 = new AdRequest.Builder().build();
+        mInterstitialAd.loadAd(adRequest2);
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+                mInterstitialAd.show();
+            }
+
+            @Override
+            public void onAdClosed() {
+                if(playing) {
+                    InteractivePlayerView ipv = DataHolder.getInstance().getIpv();
+                    ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
+                    ipv.start();
+                }
+            }
+        });
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
         playing = DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying();
         User currentUser = DataHolder.getInstance().getCurrentUser();
         setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
-        setContentView(R.layout.activity_playlist);
         sharerInfo = (TextView) findViewById(R.id.singerText);
         songInfo = (TextView) findViewById(R.id.songText);
         likesInfo = (TextView) findViewById(R.id.likesCountText);
@@ -71,7 +97,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         songTitleSlider = (TextView) findViewById(R.id.listHeader);
         songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
         initDrawer();
-        new MyNotification(this);
         slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         listView = (ListView) findViewById(R.id.songsList);
@@ -79,10 +104,13 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         ipv.setMax(123);
         if(playing) {
             (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
             ipv.setMax((int) DataHolder.getInstance().getPlaylist().getSongDuration());
             ipv.setCoverDrawable(R.drawable.no_cover);
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
             ipv.start();
+            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
             DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
             DataHolder.getInstance().getPlaylist().updateSongInfoDisplay();
             String coverURl = DataHolder.getInstance().getPlaylist().getPlayingSong().getCoverUrl();
@@ -99,9 +127,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     }
                 }
             });
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+
         DataHolder.getInstance().setIpv(ipv);
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());

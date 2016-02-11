@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -24,10 +25,12 @@ import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.util.concurrent.ExecutionException;
 
+import br.com.goncalves.pugnotification.notification.PugNotification;
 import okio.Timeout;
 import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.Launcher;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListChoice;
+import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 
 /**
@@ -35,7 +38,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.R;
  */
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
-    private static final int POLL_INTERVAL = 1000 * 60 * 3; // 5 minutes
+    private static final int POLL_INTERVAL = 1000 * 60 * 3; // 3 minutes
 
     public PollService() {
         super(TAG);
@@ -51,39 +54,23 @@ public class PollService extends IntentService {
         if (!isNetworkAvailable)
             return;
 
-        String lastSongSaved = getLastSaved();
-        String resultId = fetchLastSound();
-        if (!resultId.equals("") && !lastSongSaved.equals("0") && !resultId.equals(lastSongSaved)) {
-            Log.i(TAG, "Got a new result: " + resultId);
-            Intent myIntent = new Intent(this, Launcher.class);
-            PendingIntent pi = PendingIntent
-                    .getActivity(this, 0, myIntent, 0);
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setTicker("Le Fourre-Tout Sonore - Nouveauté")
-                    .setSmallIcon(R.drawable.logo)
-                    .setContentTitle("Le Fourre-Tout Sonore")
-                    .setContentText("Nouveau son !")
-                    .setContentIntent(pi)
-                    .setAutoCancel(true)
-                    .build();
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.notify(0, notification);
-            FileOutputStream fos;
-            try {
-                fos = openFileOutput("lastSong", Context.MODE_PRIVATE);
-                ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeInt(Integer.valueOf(resultId));
-                oos.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Log.i(TAG, "Got an old result: " + resultId);
-        }
 
-        Log.i(TAG, "Received an intent: " + intent);
+        int lastAddedSong = fetchLastSound();
+        if(lastAddedSong > getLastSaved()) {
+            PugNotification.with(this)
+                    .load()
+                    .title("Nouveauté")
+                    .message("Un nouveau son a été ajouté !")
+                    .bigTextStyle("Du nouveau !")
+                    .smallIcon(R.drawable.logo_icon)
+                    .largeIcon(R.drawable.logo)
+                    .flags(Notification.DEFAULT_ALL)
+                    .click(PlayListView.class, null)
+                    .simple()
+                    .build();
+
+            saveLastSong(lastAddedSong);
+        }
     }
 
     public static void setServiceAlarm(Context context, boolean isOn) {
@@ -101,7 +88,7 @@ public class PollService extends IntentService {
         }
     }
 
-    public String fetchLastSound() {
+    public int fetchLastSound() {
         String lastSong = "0";
         RequestFuture<String> future = RequestFuture.newFuture();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
@@ -110,45 +97,38 @@ public class PollService extends IntentService {
         requestQueue.add(jsObjRequest);
         try {
             lastSong = future.get(); // this will block (forever)
-            if(lastSong.equals("") || lastSong == null)
+            if(lastSong.equals(""))
                 lastSong = "0";
             Log.i(TAG, "lastSongID = " + lastSong);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
-        return lastSong;
+        return Integer.parseInt(lastSong);
     }
 
-    public String getLastSaved() {
-        FileInputStream fis = null;
-        String lastSongSaved = "0";
-        try {
-            fis = openFileInput("lastSong");
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            lastSongSaved = String.valueOf(ois.readInt());
-            ois.close();
-        } catch (FileNotFoundException e) {
-            FileOutputStream fos;
-            try {
-                fos = openFileOutput("lastSong", Context.MODE_PRIVATE);
-                ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeInt(0);
-                oos.close();
-            } catch (FileNotFoundException e1) {
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            e.printStackTrace();
-        } catch (StreamCorruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void createSharedPref() {
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("lastSongSaved", 0);
+        editor.commit();
+    }
+
+    private void saveLastSong(int id) {
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("lastSongSaved", id);
+        editor.commit();
+    }
+
+    public int getLastSaved() {
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        int lastSongSaved = sharedPref.getInt("lastSongSaved", 0);
+        if(lastSongSaved == 0)
+            createSharedPref();
 
         return lastSongSaved;
     }

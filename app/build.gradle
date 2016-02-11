@@ -7,8 +7,8 @@ android {
         applicationId "tk.lefourretoutsonore.lefourre_toutsonore"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 9
-        versionName "1.0.8"
+        versionCode 12
+        versionName "1.0.10"
     }
     buildTypes {
         release {
@@ -37,4 +37,5 @@ dependencies {
     compile 'com.sothree.slidinguppanel:library:3.2.1'
     compile 'com.google.android.gms:play-services-ads:8.3.0'
     compile 'ch.acra:acra:4.7.0'
+    compile 'com.github.halysongoncalves:pugnotification:1.8.1'
 }

@@ -41,6 +41,7 @@ public class MyNotification {
                 .title(current.getTitle())
                 .message("Son en cours")
                 .bigTextStyle(current.getArtist())
+                .vibrate(new long[0])
                 .smallIcon(R.drawable.logo_icon)
                 .largeIcon(R.drawable.logo)
                 .flags(Notification.FLAG_ONGOING_EVENT)

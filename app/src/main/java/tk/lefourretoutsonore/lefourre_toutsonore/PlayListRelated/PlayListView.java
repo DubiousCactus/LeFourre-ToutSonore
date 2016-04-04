@@ -12,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,7 +30,6 @@ import co.mobiwise.library.InteractivePlayerView;
 import co.mobiwise.library.OnActionClickedListener;
 import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
-import tk.lefourretoutsonore.lefourre_toutsonore.MyNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
 import tk.lefourretoutsonore.lefourre_toutsonore.Song;
@@ -86,7 +84,10 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
-        playing = DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying();
+        if(DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying())
+            playing = true;
+        else
+            playing = false;
         User currentUser = DataHolder.getInstance().getCurrentUser();
         setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
         sharerInfo = (TextView) findViewById(R.id.singerText);
@@ -190,7 +191,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         findViewById(R.id.previous_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (DataHolder.getInstance().getPlaylist().getSongIndex() >= 0) {
+                if (DataHolder.getInstance().getPlaylist().getSongIndex() > 0) {
                     playing = true;
                     (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex() - 1);
@@ -240,7 +241,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.nav_ranking) {
+                if (id == R.id.nav_my_songs) {
                     Intent myIntent = new Intent(PlayListView.this, Ranking.class);
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_all) {

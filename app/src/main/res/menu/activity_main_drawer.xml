@@ -11,9 +11,9 @@
             android:icon="@drawable/ic_menu_slideshow"
             android:title="Tous les sons" />
         <item
-            android:id="@+id/nav_ranking"
+            android:id="@+id/nav_my_songs"
             android:icon="@android:drawable/ic_menu_sort_by_size"
-            android:title="Classement" />
+            android:title="Mes ajouts" />
         <item
             android:id="@+id/nav_likes"
             android:icon="@android:drawable/ic_menu_compass"

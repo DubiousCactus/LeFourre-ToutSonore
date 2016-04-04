@@ -25,7 +25,6 @@ public class Launcher extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ACRA.init(this.getApplication());
         toShareWeGo = false;
         // Get intent, action and MIME type
         Intent intent = getIntent();

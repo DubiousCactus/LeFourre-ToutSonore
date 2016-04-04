@@ -14,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -34,8 +36,10 @@ public class Main extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setTitle("Le Fourre-Tout Sonore");
         setContentView(R.layout.activity_main);
-        if(currentUser == null)
+        if(currentUser == null && DataHolder.getInstance().getCurrentUser() != null)
             currentUser = DataHolder.getInstance().getCurrentUser();
+        else
+            finish();
         ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
@@ -75,9 +79,8 @@ public class Main extends AppCompatActivity {
                 if (id == R.id.nav_all) {
                     DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.ALL);
                     Main.this.startActivity(myIntent);
-                } else if (id == R.id.nav_ranking) {
-                    myIntent = new Intent(Main.this, Ranking.class);
-                    Main.this.startActivity(myIntent);
+                } else if (id == R.id.nav_my_songs) {
+                    Toast.makeText(Main.this, "Fonction non implémentée", Toast.LENGTH_SHORT).show();
                 } else if (id == R.id.nav_likes) {
                     DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.LIKES);
                     Main.this.startActivity(myIntent);

@@ -15,7 +15,8 @@ public enum PlayListChoice {
     POP("5", "Pop", "Variété française - Soul - Country - Pop Rock", R.drawable.ban_pop),
     CORE("6", "Core", "Frenchcore - Hardcore - Hardtek - Acidcore", R.drawable.ban_core),
     HIPHOP("7", "Hip-Hop", "Trap - Rap - R'n'B - Trip Hop", R.drawable.ban_hiphop),
-    ROCK("4", "Rock n' Roll", "Folk - Hard Rock - Blues - Jazz", R.drawable.ban_rock);
+    ROCK("4", "Rock n' Roll", "Folk - Hard Rock - Blues - Jazz", R.drawable.ban_rock),
+    MY_SONGS("MY_SONGS", "Mes ajouts", "", -1);
 
     private String id;
     private String longName;

@@ -192,6 +192,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         String url;
         if(choice == PlayListChoice.LIKES)
             url = "http://lefourretoutsonore.tk/service/getLikesPlaylist.php?sharer=" + currentUser.getId();
+        else if(choice == PlayListChoice.MY_SONGS)
+            url = "http://lefourretoutsonore.tk/service/getMySongs.php?sharer=" + currentUser.getId();
         else
             url = "http://lefourretoutsonore.tk/service/getPlaylistAsJson.php?choice=" + choice.getId() + "&user=" + currentUser.getId();
         CustomRequest jsObjRequest = new CustomRequest(url, params, (Response.Listener<JSONObject>) context, (Response.ErrorListener) context);

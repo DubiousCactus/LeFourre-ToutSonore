@@ -80,7 +80,8 @@ public class Main extends AppCompatActivity {
                     DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.ALL);
                     Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_my_songs) {
-                    Toast.makeText(Main.this, "Fonction non implémentée", Toast.LENGTH_SHORT).show();
+                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.MY_SONGS);
+                    Main.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.LIKES);
                     Main.this.startActivity(myIntent);

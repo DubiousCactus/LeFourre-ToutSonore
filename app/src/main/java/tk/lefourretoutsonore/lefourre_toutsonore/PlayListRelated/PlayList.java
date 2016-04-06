@@ -460,6 +460,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             ipv.stop();
     }
 
+    public void reloadIpv() {
+        ipv = DataHolder.getInstance().getIpv();
+    }
+
     public void resume() {
         if(state == PlayListState.PAUSED)
             exoPlayer.setPlayWhenReady(true);

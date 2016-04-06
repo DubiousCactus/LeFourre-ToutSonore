@@ -83,10 +83,6 @@ public class MyNotification {
         PendingIntent btn2 = PendingIntent.getActivity(parent, 1, pause, 0);
         view.setOnClickPendingIntent(R.id.notifPause, btn2);
 
-        Intent play = new Intent(parent, HelperActivity.class);
-        play.putExtra("DO", "play");
-        PendingIntent btn3 = PendingIntent.getActivity(parent, 2, play, 0);
-        view.setOnClickPendingIntent(R.id.notifPlay, btn3);
         //listener 2
 
         Intent next = new Intent(parent, HelperActivity.class);

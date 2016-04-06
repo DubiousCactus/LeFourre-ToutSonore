@@ -26,28 +26,21 @@
         <ImageButton
             android:id="@+id/notifPrevious"
             android:layout_marginLeft="20dp"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
             android:background="@drawable/icon_back"/>
 
         <ImageButton
             android:id="@+id/notifPause"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
             android:layout_marginLeft="20dp"
             android:background="@drawable/pause"/>
 
         <ImageButton
-            android:id="@+id/notifPlay"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_marginLeft="20dp"
-            android:background="@drawable/play"/>
-
-        <ImageButton
             android:id="@+id/notifNext"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
             android:layout_marginLeft="20dp"
             android:background="@drawable/icon_forward"/>
     </LinearLayout>

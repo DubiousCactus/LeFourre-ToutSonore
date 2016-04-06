@@ -83,6 +83,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         DataHolder.getInstance().setIpv(ipv);
         initListeners();
         ((TextView) findViewById(R.id.user)).setText(DataHolder.getInstance().getCurrentUser().getName());
+        (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
         populate();
     }
 
@@ -167,15 +168,18 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             ipv.setCoverDrawable(R.drawable.no_cover);
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
             ipv.start();
+            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
             (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
             playList.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
             playList.updateSongInfoDisplay();
             String coverURl = playList.getPlayingSong().getCoverUrl();
             if(coverURl != null)
                 ipv.setCoverURL(coverURl);
+            DataHolder.getInstance().setIpv(ipv);
+            playList.reloadIpv();
+            playList.updateSongInfoDisplay();
         } else {
             (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
-            (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
         }
     }
 
@@ -212,10 +216,24 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(playList.getState() == PlayListState.PLAYING || playList.getState() == PlayListState.BUFFERING)
+                if (playList.getState() == PlayListState.PLAYING || playList.getState() == PlayListState.BUFFERING) {
                     playList.pause();
+                    (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
+                    (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
+                }
                 playList.play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                if(position == 0) {
+                    (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
+                    (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
+                }
+                else if(position == playList.getSongList().size() - 1) {
+                    (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+                    (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
+                } else {
+                    (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
+                    (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
+                }
             }
         });
     }

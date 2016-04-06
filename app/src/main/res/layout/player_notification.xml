@@ -18,29 +18,24 @@
         android:gravity="center"
         android:paddingTop="10dp">
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/logo"/>
-
         <ImageButton
             android:id="@+id/notifPrevious"
             android:layout_marginLeft="20dp"
-            android:layout_width="15dp"
-            android:layout_height="15dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/icon_back"/>
 
         <ImageButton
             android:id="@+id/notifPause"
-            android:layout_width="15dp"
-            android:layout_height="15dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:layout_marginLeft="20dp"
             android:background="@drawable/pause"/>
 
         <ImageButton
             android:id="@+id/notifNext"
-            android:layout_width="15dp"
-            android:layout_height="15dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:layout_marginLeft="20dp"
             android:background="@drawable/icon_forward"/>
     </LinearLayout>

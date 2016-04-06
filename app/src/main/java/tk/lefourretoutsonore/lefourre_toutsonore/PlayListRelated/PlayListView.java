@@ -162,12 +162,12 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onResume() {
         super.onResume();
-        if(playList.getState() == PlayListState.PLAYING) {
-            (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+        if(playList.getState() == PlayListState.PLAYING || playList.getState() == PlayListState.PAUSED) {
             ipv.setMax((int) playList.getSongDuration());
             ipv.setCoverDrawable(R.drawable.no_cover);
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
-            ipv.start();
+            if(playList.getState() == PlayListState.PLAYING)
+                ipv.start();
             (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
             (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
             playList.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
@@ -177,7 +177,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 ipv.setCoverURL(coverURl);
             DataHolder.getInstance().setIpv(ipv);
             playList.reloadIpv();
-            playList.updateSongInfoDisplay();
         } else {
             (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
         }
@@ -188,6 +187,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public void onClick(View v) {
                 playList.play(playList.getSongIndex() + 1);
+                (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
             }
         });
 
@@ -197,6 +197,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 if (playList.getSongIndex() > 0) {
                     playList.play(playList.getSongIndex() - 1);
                 }
+                (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
             }
         });
 
@@ -384,7 +385,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onSongIdle() {
-        (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+        //(findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
         //stopBlinking();
     }
 

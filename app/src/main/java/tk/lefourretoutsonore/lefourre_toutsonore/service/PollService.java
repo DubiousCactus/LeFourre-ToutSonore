@@ -65,6 +65,7 @@ public class PollService extends IntentService {
                     .smallIcon(R.drawable.logo_icon)
                     .largeIcon(R.drawable.logo)
                     .flags(Notification.DEFAULT_ALL)
+                    .autoCancel(true)
                     .click(Launcher.class, null)
                     .simple()
                     .build();

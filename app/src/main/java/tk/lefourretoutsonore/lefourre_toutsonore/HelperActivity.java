@@ -20,6 +20,10 @@ public class HelperActivity extends Activity {
             DataHolder.getInstance().getPlaylist().resume();
         else if(action.equals("pause"))
             DataHolder.getInstance().getPlaylist().pause();
+        else if(action.equals("previous"))
+            DataHolder.getInstance().getPlaylist().previous();
+        else if(action.equals("next"))
+            DataHolder.getInstance().getPlaylist().next();
 
         finish();
     }

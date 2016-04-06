@@ -7,8 +7,8 @@ android {
         applicationId "tk.lefourretoutsonore.lefourre_toutsonore"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 13
-        versionName "1.0.12"
+        versionCode 14
+        versionName "1.0.6"
     }
     buildTypes {
         release {

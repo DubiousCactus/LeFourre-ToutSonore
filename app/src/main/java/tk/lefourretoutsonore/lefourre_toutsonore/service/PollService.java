@@ -113,7 +113,7 @@ public class PollService extends IntentService {
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("lastSongSaved", 0);
-        editor.commit();
+        editor.apply();
     }
 
     private void saveLastSong(int id) {
@@ -121,7 +121,7 @@ public class PollService extends IntentService {
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("lastSongSaved", id);
-        editor.commit();
+        editor.apply();
     }
 
     public int getLastSaved() {

@@ -187,10 +187,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         return songIndex;
     }
 
-    public ExoPlayer getPlayer() {
-        return exoPlayer;
-    }
-
     public PlayListChoice getChoice() {
         return choice;
     }
@@ -444,10 +440,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         exoPlayer.setPlayWhenReady(true);
     }
 
-    public void destroy() {
-        exoPlayer.release();
-    }
-
     public void reset() {
         songList.clear();
     }
@@ -470,11 +462,13 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     public void previous() {
-
+        if(songIndex > 0)
+            play(songIndex-1);
     }
 
     public void next() {
-
+        if(songIndex < songList.size() - 1)
+            play(songIndex+1);
     }
 
     public long getSongDuration() {
@@ -486,10 +480,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public Song getPlayingSong() {
         return playingSong;
-    }
-
-    public int getCurrentPosition() {
-        return ipv.getProgress();
     }
 
     void updateSongInfoDisplay() { //Move to playlistview

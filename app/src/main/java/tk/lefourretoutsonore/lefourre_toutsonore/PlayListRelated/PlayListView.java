@@ -33,7 +33,6 @@ import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
 import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
-import tk.lefourretoutsonore.lefourre_toutsonore.User;
 
 /**
  * Created by transpalette on 12/31/15.
@@ -168,8 +167,10 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
             if(playList.getState() == PlayListState.PLAYING)
                 ipv.start();
-            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
-            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+            if(DataHolder.getInstance().getPreviousView() != playList.getChoice()) {
+                (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
+                (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+            }
             playList.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
             playList.updateSongInfoDisplay();
             String coverURl = playList.getPlayingSong().getCoverUrl();
@@ -222,6 +223,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
                     (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
                 }
+                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                 playList.play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                 if(position == 0) {
@@ -247,6 +249,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
                 int id = item.getItemId();
+                DataHolder.getInstance().setPreviousView(playList.getChoice());
                 if (id == R.id.nav_my_songs) {
                     Intent myIntent = new Intent(PlayListView.this, Ranking.class);
                     PlayListView.this.startActivity(myIntent);
@@ -288,6 +291,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DataHolder.getInstance().setPreviousView(playList.getChoice());
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {

@@ -163,8 +163,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         super.onResume();
         if(playList.getState() == PlayListState.PLAYING) {
             (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
-            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
             ipv.setMax((int) playList.getSongDuration());
             ipv.setCoverDrawable(R.drawable.no_cover);
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
@@ -175,6 +173,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             String coverURl = playList.getPlayingSong().getCoverUrl();
             if(coverURl != null)
                 ipv.setCoverURL(coverURl);
+        } else {
+            (findViewById(R.id.next_song)).setVisibility(View.VISIBLE);
+            (findViewById(R.id.previous_song)).setVisibility(View.VISIBLE);
         }
     }
 
@@ -198,14 +199,14 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         findViewById(R.id.play_button_layout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (playList.getState() != PlayListState.PLAYING ||playList.getState() != PlayListState.BUFFERING) { //Click on play
+                if(playList.getState() == PlayListState.PAUSED)
+                    playList.resume();
+                else if (playList.getState() != PlayListState.PLAYING && playList.getState() != PlayListState.BUFFERING) { //Click on play
+                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
                     playList.play(playList.getSongIndex());
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                } else if(playList.getState() == PlayListState.PAUSED)
-                    playList.resume();
-                else  //Click on pause
+                } else //Click on pause
                     playList.pause();
-
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -360,11 +361,13 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onSongPause() {
         (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+        stopBlinking();
     }
 
     @Override
     public void onSongIdle() {
         (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+        //stopBlinking();
     }
 
     @Override
@@ -376,6 +379,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onSongStop() {
         (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+        stopBlinking();
     }
     
     @Override

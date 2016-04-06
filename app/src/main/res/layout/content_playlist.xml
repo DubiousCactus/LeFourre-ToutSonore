@@ -124,7 +124,8 @@
                 android:paddingTop="10dp"
                 android:layout_centerHorizontal="true"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:textAlignment="center"/>
 
             <com.google.android.gms.ads.AdView
                 android:id="@+id/adView"

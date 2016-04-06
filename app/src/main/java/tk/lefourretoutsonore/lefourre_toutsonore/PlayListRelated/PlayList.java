@@ -119,7 +119,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) { //Maybe use ExoPlayer's state instead ??
-        if(playbackState == ExoPlayer.STATE_READY && playWhenReady) {
+        if(playbackState == ExoPlayer.STATE_READY && playWhenReady && state != PlayListState.PLAYING) {
             listener.onSongPlay();
             state = PlayListState.PLAYING;
             ipv.setMax((int) getSongDuration());
@@ -138,7 +138,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         } else if(playbackState == ExoPlayer.STATE_IDLE) {
             listener.onSongIdle();
             state = PlayListState.IDLE;
-        } else if(playbackState == ExoPlayer.STATE_BUFFERING) {
+        } else if(playbackState == ExoPlayer.STATE_BUFFERING && state != PlayListState.PLAYING && state != PlayListState.IDLE) {
             listener.onSongBuffering();
             state = PlayListState.BUFFERING;
         }
@@ -279,7 +279,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
-        state = PlayListState.BUFFERING;
         exoPlayer.stop();
         ipv = DataHolder.getInstance().getIpv();
         if(choice == PlayListChoice.LIKES)
@@ -456,6 +455,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     public void pause() {
         exoPlayer.setPlayWhenReady(false);
         state = PlayListState.PAUSED;
+        listener.onSongPause();
         if(ipv != null)
             ipv.stop();
     }

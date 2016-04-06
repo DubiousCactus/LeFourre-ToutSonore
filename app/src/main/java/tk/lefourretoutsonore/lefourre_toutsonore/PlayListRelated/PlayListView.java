@@ -251,8 +251,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                 int id = item.getItemId();
                 DataHolder.getInstance().setPreviousView(playList.getChoice());
                 if (id == R.id.nav_my_songs) {
-                    Intent myIntent = new Intent(PlayListView.this, Ranking.class);
-                    PlayListView.this.startActivity(myIntent);
+                    setTitle(PlayListChoice.MY_SONGS.getLongName());
+                    playList.setChoice(PlayListChoice.MY_SONGS);
+                    populate();
                 } else if (id == R.id.nav_all) {
                     setTitle(PlayListChoice.ALL.getLongName());
                     playList.setChoice(PlayListChoice.ALL);

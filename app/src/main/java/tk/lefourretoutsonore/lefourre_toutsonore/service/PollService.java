@@ -100,7 +100,6 @@ public class PollService extends IntentService {
             lastSong = future.get(); // this will block (forever)
             if(lastSong.equals(""))
                 lastSong = "0";
-            Log.i(TAG, "lastSongID = " + lastSong);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }

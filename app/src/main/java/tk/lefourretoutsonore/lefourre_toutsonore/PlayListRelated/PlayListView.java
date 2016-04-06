@@ -165,8 +165,10 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             ipv.setMax((int) playList.getSongDuration());
             ipv.setCoverDrawable(R.drawable.no_cover);
             ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
-            if(playList.getState() == PlayListState.PLAYING)
+            if(playList.getState() == PlayListState.PLAYING) {
                 ipv.start();
+                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+            }
             if(DataHolder.getInstance().getPreviousView() != playList.getChoice()) {
                 (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
                 (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);

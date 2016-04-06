@@ -1,4 +1,4 @@
-package tk.lefourretoutsonore.lefourre_toutsonore;
+package tk.lefourretoutsonore.lefourre_toutsonore.SongRelated;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import tk.lefourretoutsonore.lefourre_toutsonore.R;
 
 /**
  * Created by M4gicT0 on 09/01/2016.

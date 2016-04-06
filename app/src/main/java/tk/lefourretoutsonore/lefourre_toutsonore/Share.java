@@ -29,6 +29,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Style;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.StylesAdapter;
+
 public class Share extends AppCompatActivity implements Response.ErrorListener, Response.Listener<JSONObject> {
     private StylesAdapter stylesAdapter;
     private ArrayList<Style> styles;

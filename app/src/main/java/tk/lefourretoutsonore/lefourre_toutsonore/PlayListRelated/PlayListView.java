@@ -32,19 +32,19 @@ import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.Main;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
 import tk.lefourretoutsonore.lefourre_toutsonore.Ranking;
-import tk.lefourretoutsonore.lefourre_toutsonore.Song;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
 
 /**
  * Created by transpalette on 12/31/15.
  */
 
-public class PlayListView extends AppCompatActivity implements Response.Listener<JSONObject>, Response.ErrorListener {
+public class PlayListView extends AppCompatActivity implements Response.Listener<JSONObject>, Response.ErrorListener, StateListener {
 
     private ListView listView;
     private ProgressDialog dialog;
     private InteractivePlayerView ipv;
-    private boolean playing;
+    private PlayList playList;
     private SlidingUpPanelLayout slidingLayout;
     private ObjectAnimator colorFade;
     private TextView songInfo;
@@ -59,7 +59,34 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_playlist);
+        playList = DataHolder.getInstance().getPlaylist();
+        playList.setListener(this);
+        initAds();
+        setTitle(playList.getChoice().getLongName());
+        initTextViews();
+        initDrawer();
+        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        listView = (ListView) findViewById(R.id.songsList);
+        ipv = (InteractivePlayerView) findViewById(R.id.ipv);
+        ipv.setMax(123);
+        ipv.setOnActionClickedListener(new OnActionClickedListener() {
+            @Override
+            public void onActionClicked(int i) {
+                switch (i) {
+                    case 2:
+                        playList.likeSong();
+                        break;
+                }
+            }
+        });
+        DataHolder.getInstance().setIpv(ipv);
+        initListeners();
+        ((TextView) findViewById(R.id.user)).setText(DataHolder.getInstance().getCurrentUser().getName());
+        populate();
+    }
 
+    private void initAds() {
         final InterstitialAd mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getResources().getString(R.string.inter_ad_pl_unit_id));
         AdRequest adRequest2 = new AdRequest.Builder().build();
@@ -73,7 +100,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
             @Override
             public void onAdClosed() {
-                if(playing) {
+                if (playList.getState() == PlayListState.PLAYING) {
                     InteractivePlayerView ipv = DataHolder.getInstance().getIpv();
                     ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
                     ipv.start();
@@ -83,13 +110,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+    }
 
-        if(DataHolder.getInstance().getPlaylist() != null && DataHolder.getInstance().getPlaylist().isPlaying())
-            playing = true;
-        else
-            playing = false;
-        User currentUser = DataHolder.getInstance().getCurrentUser();
-        setTitle(DataHolder.getInstance().getPlaylist().getChoice().getLongName());
+    private void initTextViews() {
         sharerInfo = (TextView) findViewById(R.id.singerText);
         songInfo = (TextView) findViewById(R.id.songText);
         likesInfo = (TextView) findViewById(R.id.likesCountText);
@@ -97,42 +120,6 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         descriptionInfo = (TextView) findViewById(R.id.descriptionText);
         songTitleSlider = (TextView) findViewById(R.id.listHeader);
         songArtistSlider = (TextView) findViewById(R.id.listSubHeader);
-        initDrawer();
-        slidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-        listView = (ListView) findViewById(R.id.songsList);
-        ipv = (InteractivePlayerView) findViewById(R.id.ipv);
-        ipv.setMax(123);
-        if(playing) {
-            (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
-            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
-            ipv.setMax((int) DataHolder.getInstance().getPlaylist().getSongDuration());
-            ipv.setCoverDrawable(R.drawable.no_cover);
-            ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
-            ipv.start();
-            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
-            DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
-            DataHolder.getInstance().getPlaylist().updateSongInfoDisplay();
-            String coverURl = DataHolder.getInstance().getPlaylist().getPlayingSong().getCoverUrl();
-            if(coverURl != null)
-                ipv.setCoverURL(coverURl);
-        } else
-            ipv.setOnActionClickedListener(new OnActionClickedListener() {
-                @Override
-                public void onActionClicked(int i) {
-                    switch (i) {
-                        case 2:
-                            DataHolder.getInstance().getPlaylist().likeSong();
-                            break;
-                    }
-                }
-            });
-
-        DataHolder.getInstance().setIpv(ipv);
-        initListeners();
-        ((TextView) findViewById(R.id.user)).setText(currentUser.getName());
-        populate();
     }
 
     @Override
@@ -155,15 +142,13 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         colorFade.start();
     }
 
-    public void stopBlinking(boolean error) {
+    public void stopBlinking() {
         if(colorFade != null) {
             colorFade.cancel();
             colorFade.setTarget(null);
             colorFade = null;
             findViewById(R.id.imageBottom).setBackgroundColor(Color.parseColor("#262626"));
         }
-        if(error)
-            findViewById(R.id.play_button_layout).callOnClick();
     }
 
     @Override
@@ -176,25 +161,36 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onResume() {
         super.onResume();
+        if(playList.getState() == PlayListState.PLAYING) {
+            (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+            (findViewById(R.id.previous_song)).setVisibility(View.INVISIBLE);
+            ipv.setMax((int) playList.getSongDuration());
+            ipv.setCoverDrawable(R.drawable.no_cover);
+            ipv.setProgress((int) DataHolder.getInstance().getPlayer().getCurrentPosition() / 1000);
+            ipv.start();
+            (findViewById(R.id.next_song)).setVisibility(View.INVISIBLE);
+            playList.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
+            playList.updateSongInfoDisplay();
+            String coverURl = playList.getPlayingSong().getCoverUrl();
+            if(coverURl != null)
+                ipv.setCoverURL(coverURl);
+        }
     }
 
     public void initListeners() {
         findViewById(R.id.next_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playing = true;
-                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex() + 1);
+                playList.play(playList.getSongIndex() + 1);
             }
         });
 
         findViewById(R.id.previous_song).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (DataHolder.getInstance().getPlaylist().getSongIndex() > 0) {
-                    playing = true;
-                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex() - 1);
+                if (playList.getSongIndex() > 0) {
+                    playList.play(playList.getSongIndex() - 1);
                 }
             }
         });
@@ -202,32 +198,22 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
         findViewById(R.id.play_button_layout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!playing) { //Click on play
-                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                    ipv.stop();
-                    if(DataHolder.getInstance().getPlaylist().isPlaying())
-                        DataHolder.getInstance().getPlaylist().resume();
-                    else
-                        DataHolder.getInstance().getPlaylist().play(DataHolder.getInstance().getPlaylist().getSongIndex());
-                    playing = true;
+                if (playList.getState() != PlayListState.PLAYING ||playList.getState() != PlayListState.BUFFERING) { //Click on play
+                    playList.play(playList.getSongIndex());
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                } else { //Click on pause
-                    (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
-                    ipv.stop();
-                    DataHolder.getInstance().getPlaylist().pause();
-                    playing = false;
-                }
+                } else if(playList.getState() == PlayListState.PAUSED)
+                    playList.resume();
+                else  //Click on pause
+                    playList.pause();
+
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
-                playing = true;
-                ipv.stop();
-                if(DataHolder.getInstance().getPlaylist().isPlaying())
-                    DataHolder.getInstance().getPlaylist().pause();
-                DataHolder.getInstance().getPlaylist().play(position);
+                if(playList.getState() == PlayListState.PLAYING || playList.getState() == PlayListState.BUFFERING)
+                    playList.pause();
+                playList.play(position);
                 slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
@@ -246,7 +232,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_all) {
                     setTitle(PlayListChoice.ALL.getLongName());
-                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.ALL);
+                    playList.setChoice(PlayListChoice.ALL);
                     populate();
                     slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 } else if (id == R.id.nav_home) {
@@ -254,7 +240,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
                     PlayListView.this.startActivity(myIntent);
                 } else if (id == R.id.nav_likes) {
                     setTitle(PlayListChoice.LIKES.getLongName());
-                    DataHolder.getInstance().getPlaylist().setChoice(PlayListChoice.LIKES);
+                    playList.setChoice(PlayListChoice.LIKES);
                     populate();
                 }
 
@@ -272,11 +258,11 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     }
 
     private void populate() {
-        DataHolder.getInstance().getPlaylist().setContext(this);
-        DataHolder.getInstance().getPlaylist().setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
+        playList.setContext(this);
+        playList.setSongInfoDisplay(songInfo, sharerInfo, likesInfo, stylesInfo, descriptionInfo, songArtistSlider, songTitleSlider);
          dialog = ProgressDialog.show(this, "",
                 "Chargement...", true);
-        DataHolder.getInstance().getPlaylist().fetchSounds();
+        playList.fetchSounds();
     }
 
     @Override
@@ -315,9 +301,9 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
     @Override
     public void onErrorResponse(VolleyError error) {
         Toast.makeText(this, "Erreur réseau", Toast.LENGTH_SHORT).show();
-        if(DataHolder.getInstance().getPlaylist().retrieveFromDisk()) {
+        if(playList.retrieveFromDisk()) {
             listView = (ListView) findViewById(R.id.songsList);
-            PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
+            PlaylistAdapter adapter = new PlaylistAdapter(this, playList);
             listView.setAdapter(adapter);
             Toast.makeText(PlayListView.this, "Chargement depuis le cache", Toast.LENGTH_SHORT).show();
         } else
@@ -327,7 +313,7 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onResponse(JSONObject response) {
-        DataHolder.getInstance().getPlaylist().reset();
+        playList.reset();
         int count = 0;
         for(Iterator it = response.keys(); it.hasNext();) { //Parsing list of songs
             String songId = (String) it.next(); //Selecting song
@@ -355,14 +341,46 @@ public class PlayListView extends AppCompatActivity implements Response.Listener
             } catch (JSONException e) { e.printStackTrace(); }
 
             Song songItem = new Song(id, likes, sharer, title, artist, styles, link, description, liked);
-            DataHolder.getInstance().getPlaylist().addSong(songItem);
+            playList.addSong(songItem);
             count++;
         }
-        DataHolder.getInstance().getPlaylist().setCount(count);
-        DataHolder.getInstance().getPlaylist().saveOnDisk();
-        PlaylistAdapter adapter = new PlaylistAdapter(this, DataHolder.getInstance().getPlaylist());
+        playList.setCount(count);
+        playList.saveOnDisk();
+        PlaylistAdapter adapter = new PlaylistAdapter(this, playList);
         listView.setAdapter(adapter);
         dialog.dismiss();
     }
 
+    @Override
+    public void onSongPlay() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+        stopBlinking();
+    }
+
+    @Override
+    public void onSongPause() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+    }
+
+    @Override
+    public void onSongIdle() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+    }
+
+    @Override
+    public void onSongError() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+        stopBlinking();
+    }
+
+    @Override
+    public void onSongStop() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.play);
+    }
+    
+    @Override
+    public void onSongBuffering() {
+        (findViewById(R.id.control)).setBackgroundResource(R.drawable.pause);
+        blink();
+    }
 }

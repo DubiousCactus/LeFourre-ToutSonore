@@ -1,4 +1,4 @@
-package tk.lefourretoutsonore.lefourre_toutsonore;
+package tk.lefourretoutsonore.lefourre_toutsonore.SongRelated;
 
 /**
  * Created by M4gicT0 on 09/01/2016.

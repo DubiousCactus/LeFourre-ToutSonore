@@ -38,7 +38,6 @@ import com.google.android.exoplayer.util.Util;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -54,7 +53,7 @@ import tk.lefourretoutsonore.lefourre_toutsonore.CustomRequest;
 import tk.lefourretoutsonore.lefourre_toutsonore.DataHolder;
 import tk.lefourretoutsonore.lefourre_toutsonore.MyNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
-import tk.lefourretoutsonore.lefourre_toutsonore.Song;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
 import tk.lefourretoutsonore.lefourre_toutsonore.User;
 
 /**
@@ -80,6 +79,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private TextView songArtistInfo;
     private static ExoPlayer exoPlayer;
     private RequestQueue requestQueue;
+    private PlayListState state;
+    private StateListener listener;
     //YouTube
     private MediaPresentationDescription manifest;
     private DefaultUriDataSource manifestDataSource;
@@ -89,9 +90,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private String videoUrl;
     private Uri contentUri;
 
+
     public PlayList() {
-        Log.i("PlayList", "creating playList");
         currentUser = DataHolder.getInstance().getCurrentUser();
+        state = PlayListState.IDLE;
         songList = new ArrayList<>();
         count = 0;
         songIndex = 0;
@@ -99,6 +101,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             exoPlayer = DataHolder.getInstance().getPlayer();
             exoPlayer.addListener(this);
         }
+    }
+
+    public void setListener(StateListener listener) {
+        this.listener = listener;
     }
 
     public void setContext(Context context) {
@@ -112,9 +118,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) { //Maybe use ExoPlayer's state instead ??
         if(playbackState == ExoPlayer.STATE_READY && playWhenReady) {
-            ((PlayListView) context).stopBlinking(false);
+            listener.onSongPlay();
+            state = PlayListState.PLAYING;
             ipv.setMax((int) getSongDuration());
             ipv.start();
             if(!songList.get(songIndex).getCoverUrl().isEmpty())
@@ -123,15 +130,17 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                 ipv.setCoverDrawable(R.drawable.no_cover);
         }
         else if(playbackState == ExoPlayer.STATE_ENDED) {
-            ipv.stop();
+            listener.onSongStop();
             songIndex++;
             updateSongInfoDisplay();
-            ((PlayListView) context).blink();
             play(songIndex);
+            state = PlayListState.IDLE;
         } else if(playbackState == ExoPlayer.STATE_IDLE) {
-            ipv.stop();
+            listener.onSongIdle();
+            state = PlayListState.IDLE;
         } else if(playbackState == ExoPlayer.STATE_BUFFERING) {
-            ipv.stop();
+            listener.onSongBuffering();
+            state = PlayListState.BUFFERING;
         }
     }
 
@@ -141,6 +150,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     @Override
     public void onPlayerError(ExoPlaybackException error) {
+        listener.onSongError();
     }
 
     public void addSong(Song song) {
@@ -183,6 +193,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public PlayListChoice getChoice() {
         return choice;
+    }
+
+    public PlayListState getState() {
+        return state;
     }
 
     public void fetchSounds() {
@@ -265,6 +279,8 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(songList.isEmpty())
             return;
 
+        state = PlayListState.BUFFERING;
+        exoPlayer.stop();
         ipv = DataHolder.getInstance().getIpv();
         if(choice == PlayListChoice.LIKES)
             ipv.setAction2Selected(true);
@@ -274,17 +290,16 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         ipv.setCoverDrawable(R.drawable.no_cover);
         ipv.setProgress(0);
         ipv.stop();
-        exoPlayer.stop();
         playingSong = songList.get(songIndex);
         this.songIndex = songIndex;
         updateSongInfoDisplay();
         ((PlayListView) context).blink();
 
-        if(playingSong.getLink().contains("soundcloud")) {
+        if(playingSong.getLink().contains("soundcloud"))
             playSoundCloud();
-        } else {
+        else
             playYoutube();
-        }
+
 
         final StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(playingSong.getSharer()), new Response.Listener<String>() {
             @Override
@@ -347,7 +362,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                             exoPlayer.seekTo(0);
                         } else {
                             Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
-                            ((PlayListView) context).stopBlinking(true);
+                            listener.onSongError();
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -357,7 +372,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Toast.makeText(context, "Lecture impossible", Toast.LENGTH_SHORT).show();
-                    ((PlayListView) context).stopBlinking(true);
+                    listener.onSongError();
                 }
             });
             requestQueue.add(request);
@@ -387,7 +402,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
                         preparePlayer();
                     } else {
                         Toast.makeText(context, "Contenu protégé - Lecture impossible", Toast.LENGTH_SHORT).show();
-                        ((PlayListView) context).stopBlinking(true);
+                        listener.onSongError();
                         context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(playingSong.getLink())));
                     }
                 } catch (UnsupportedEncodingException e) {
@@ -398,7 +413,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(context, "Erreur réseau", Toast.LENGTH_SHORT).show();
-                ((PlayListView) context).stopBlinking(true);
+                listener.onSongError();
             }
         });
         requestQueue.add(request);
@@ -440,12 +455,13 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public void pause() {
         exoPlayer.setPlayWhenReady(false);
+        state = PlayListState.PAUSED;
         if(ipv != null)
             ipv.stop();
     }
 
     public void resume() {
-        if(isPlaying())
+        if(state == PlayListState.PAUSED)
             exoPlayer.setPlayWhenReady(true);
     }
 
@@ -455,14 +471,6 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public void next() {
 
-    }
-
-    public boolean isPlaying() {
-        boolean isPlaying = false;
-        if(exoPlayer != null && exoPlayer.getCurrentPosition() > 0)
-            isPlaying = true;
-
-        return isPlaying;
     }
 
     public long getSongDuration() {
@@ -480,7 +488,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         return ipv.getProgress();
     }
 
- void updateSongInfoDisplay() {
+    void updateSongInfoDisplay() { //Move to playlistview
         if(playingSong.getSharerName().equals(DataHolder.getInstance().getCurrentUser().getName()))
             sharerInfo.setText("Ajouté par vous-même");
         else

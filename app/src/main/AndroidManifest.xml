@@ -56,7 +56,7 @@
         <activity android:name=".Share"
             android:screenOrientation="portrait" />
 
-        <receiver android:name=".BootCompletedIntentReceiver">
+        <receiver android:name=".service.BootCompletedIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

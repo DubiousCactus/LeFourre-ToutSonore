@@ -1,4 +1,4 @@
-package tk.lefourretoutsonore.lefourre_toutsonore;
+package tk.lefourretoutsonore.lefourre_toutsonore.SongRelated;
 
 import java.io.Serializable;
 

@@ -1,4 +1,4 @@
-package tk.lefourretoutsonore.lefourre_toutsonore;
+package tk.lefourretoutsonore.lefourre_toutsonore.service;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

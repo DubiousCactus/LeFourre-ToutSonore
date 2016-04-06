@@ -5,11 +5,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import br.com.goncalves.pugnotification.notification.PugNotification;
 import tk.lefourretoutsonore.lefourre_toutsonore.PlayListRelated.PlayListView;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
 
 /**
  * Created by M4gicT0 on 15/01/2016.

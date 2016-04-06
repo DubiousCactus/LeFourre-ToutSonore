@@ -8,7 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import tk.lefourretoutsonore.lefourre_toutsonore.R;
-import tk.lefourretoutsonore.lefourre_toutsonore.Song;
+import tk.lefourretoutsonore.lefourre_toutsonore.SongRelated.Song;
 
 /**
  * Created by transpalette on 1/2/16.

@@ -14,7 +14,6 @@ public class HelperActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         String action = (String) getIntent().getExtras().get("DO");
-        Log.i("debug", "helperactivity called : " + action);
         assert action != null;
         if(action.equals("play"))
             DataHolder.getInstance().getPlaylist().resume();

@@ -314,7 +314,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         if(playingSong.getSharerName().equals("none"))
             requestQueue.add(sharerRequest);
 
-        new MyNotification(context);
+        new MyNotification(context, PlayListState.PLAYING);
     }
 
     private void playSoundCloud() {
@@ -445,6 +445,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     }
 
     public void pause() {
+        new MyNotification(context, PlayListState.PAUSED);
         exoPlayer.setPlayWhenReady(false);
         state = PlayListState.PAUSED;
         listener.onSongPause();

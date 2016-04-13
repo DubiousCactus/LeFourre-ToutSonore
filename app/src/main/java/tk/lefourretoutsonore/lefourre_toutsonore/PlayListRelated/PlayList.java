@@ -201,11 +201,11 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         String url;
         if(choice == PlayListChoice.LIKES)
-            url = "http://lefourretoutsonore.tk/service/getLikesPlaylist.php?sharer=" + currentUser.getId();
+            url = "https://lefourretoutsonore.tk/service/getLikesPlaylist.php?sharer=" + currentUser.getId();
         else if(choice == PlayListChoice.MY_SONGS)
-            url = "http://lefourretoutsonore.tk/service/getMySongs.php?sharer=" + currentUser.getId();
+            url = "https://lefourretoutsonore.tk/service/getMySongs.php?sharer=" + currentUser.getId();
         else
-            url = "http://lefourretoutsonore.tk/service/getPlaylistAsJson.php?choice=" + choice.getId() + "&user=" + currentUser.getId();
+            url = "https://lefourretoutsonore.tk/service/getPlaylistAsJson.php?choice=" + choice.getId() + "&user=" + currentUser.getId();
         CustomRequest jsObjRequest = new CustomRequest(url, params, (Response.Listener<JSONObject>) context, (Response.ErrorListener) context);
         requestQueue.add(jsObjRequest);
     }
@@ -238,7 +238,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
 
     public void likeSong() {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        StringRequest likeRequest = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/service/addLike.php", new Response.Listener<String>() {
+        StringRequest likeRequest = new StringRequest(Request.Method.POST, "https://lefourretoutsonore.tk/service/addLike.php", new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if(response.equals("true"))
@@ -296,7 +296,7 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
             playYoutube();
 
 
-        final StringRequest sharerRequest = new StringRequest(Request.Method.GET, "http://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(playingSong.getSharer()), new Response.Listener<String>() {
+        final StringRequest sharerRequest = new StringRequest(Request.Method.GET, "https://lefourretoutsonore.tk/service/getSharer.php?sharer=" + String.valueOf(playingSong.getSharer()), new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if(response.equals(DataHolder.getInstance().getCurrentUser().getName()))
@@ -377,10 +377,10 @@ public class PlayList implements ExoPlayer.Listener, Serializable, ManifestFetch
     private void playYoutube() {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         String videoId = playingSong.getLink().substring(playingSong.getLink().indexOf("=") + 1);
-        String coverUrl = "http://img.youtube.com/vi/" + videoId + "/0.jpg";
+        String coverUrl = "https://img.youtube.com/vi/" + videoId + "/0.jpg";
         songList.get(songIndex).setCoverUrl(coverUrl);
         playingSong.setCoverUrl(coverUrl);
-        StringRequest request = new StringRequest(Request.Method.GET, "http://www.youtube.com/get_video_info?&video_id=" + videoId, new Response.Listener<String>() {
+        StringRequest request = new StringRequest(Request.Method.GET, "https://www.youtube.com/get_video_info?&video_id=" + videoId, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {

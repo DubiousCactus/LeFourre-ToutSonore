@@ -93,7 +93,7 @@ public class PollService extends IntentService {
         String lastSong = "0";
         RequestFuture<String> future = RequestFuture.newFuture();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String url = "http://lefourretoutsonore.tk/service/getLastSong.php";
+        String url = "https://lefourretoutsonore.tk/service/getLastSong.php";
         StringRequest jsObjRequest = new StringRequest(Request.Method.GET , url, future, future);
         requestQueue.add(jsObjRequest);
         try {

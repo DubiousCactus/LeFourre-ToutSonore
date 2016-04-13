@@ -65,7 +65,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
                 song.setDescription(((EditText) findViewById(R.id.share_description)).getText().toString());
                 //song.setSharer();
                 RequestQueue requestQueue = Volley.newRequestQueue(Share.this);
-                StringRequest request = new StringRequest(Request.Method.POST, "http://lefourretoutsonore.tk/ajout.php", new Response.Listener<String>() {
+                StringRequest request = new StringRequest(Request.Method.POST, "https://lefourretoutsonore.tk/ajout.php", new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(Share.this, "Son ajouté !", Toast.LENGTH_SHORT).show();
@@ -123,7 +123,7 @@ public class Share extends AppCompatActivity implements Response.ErrorListener, 
         //init styles arrayList from xml file
         styles = new ArrayList<>();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        CustomRequest jsObjRequest = new CustomRequest("http://lefourretoutsonore.tk/service/getStyles.php", null, new Response.Listener<JSONObject>() {
+        CustomRequest jsObjRequest = new CustomRequest("https://lefourretoutsonore.tk/service/getStyles.php", null, new Response.Listener<JSONObject>() {
 
             @Override
             public void onResponse(JSONObject response) {
